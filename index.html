@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loop — Tocando el Sonido</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <video id="video" playsinline></video>
+  <canvas id="mainCanvas"></canvas>
+
+  <!-- Tutorial overlay -->
+  <div id="tutorial">
+    <div class="tutorial-inner">
+
+      <!-- Scene 1: pinch_tutorial (reference size) -->
+      <div class="tutorial-scene active" data-scene="0">
+        <img class="tut-svg" src="svg/pinch_tutorial.svg" alt="Pinch tutorial" />
+      </div>
+
+      <!-- Scene 2: hand_tutorial -->
+      <div class="tutorial-scene" data-scene="1">
+        <img class="tut-svg" src="svg/hand_tutorial.svg" alt="Hand tutorial" />
+      </div>
+
+      <!-- Scene 3: bar_tutorial -->
+      <div class="tutorial-scene" data-scene="2">
+        <img class="tut-svg" src="svg/bar_tutorial.svg" alt="Bar tutorial" />
+      </div>
+
+      <!-- Scene 4: tempo_tutorial -->
+      <div class="tutorial-scene" data-scene="3">
+        <img class="tut-svg" src="svg/tempo_tutorial.svg" alt="Tempo tutorial" />
+      </div>
+
+      <!-- Navigation -->
+      <div class="tutorial-nav">
+        <div class="tutorial-dots">
+          <span class="tutorial-dot active"></span>
+          <span class="tutorial-dot"></span>
+          <span class="tutorial-dot"></span>
+          <span class="tutorial-dot"></span>
+        </div>
+        <p class="tutorial-hint" id="tutHint">— Press any key to continue —</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-label" id="leftLabel">izq · expresión</div>
+    <div class="hud-atmo" id="atmoLabel">Float</div>
+    <div class="hud-label" id="rightLabel">der · melodía</div>
+  </div>
+
+  <script src="layers.js"></script>
+  <script src="audio.js"></script>
+  <script src="gestures.js"></script>
+  <script src="ui.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

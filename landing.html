@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Touching Sound</title>
+  <style>
+    @font-face {
+      font-family: 'Erica One';
+      src: url('fonts/EricaOne-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Erica One', sans-serif;
+      background: #c6cdd4;
+      color: #111;
+      overflow-x: hidden;
+      position: relative; /* stacking context for cables canvas */
+    }
+
+    /* ── Cables canvas — full page, behind everything ────────────────────────── */
+    #cables-bg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    #cables-canvas { display: block; }
+
+    /* ── Header ─────────────────────────────────────────────────────────────── */
+    header {
+      position: relative;
+      z-index: 10;
+      background: #c6cdd4;
+      width: 100%;
+      padding: 12px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header a {
+      text-decoration: none;
+      color: #111;
+      font-family: 'Erica One', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      transition: opacity 0.2s;
+      text-shadow: 1px 2px 4px rgba(0,0,0,0.25);
+    }
+    header a:hover { opacity: 0.55; }
+
+    /* ── Hero ────────────────────────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      z-index: 1;           /* above cables canvas */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: visible;
+    }
+
+    .hero h1 {
+      font-family: 'Erica One', sans-serif;
+      font-size: clamp(4.5rem, 10vw, 9rem);
+      letter-spacing: 0.04em;
+      text-align: center;
+      text-transform: uppercase;
+      line-height: 0.92;
+      color: #111;
+      padding-top: 0;
+      position: relative;
+      z-index: 1;
+      flex-shrink: 0;
+      text-shadow: 3px 5px 10px rgba(0,0,0,0.30), 1px 2px 0px rgba(0,0,0,0.18);
+    }
+
+    .personaje-wrap {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: -150px;
+    }
+
+    .personaje-wrap img {
+      width: 68vw;
+      max-width: none;
+      height: auto;
+      display: block;
+      filter: drop-shadow(4px 8px 18px rgba(0,0,0,0.35));
+    }
+
+    /* ── Section blocks — sistema de espaciado: 120px entre secciones, 48px título→contenido ── */
+    .section-block {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 40px;
+      margin-top: 120px;
+    }
+
+    /* Primera sección: algo más de distancia desde el personaje */
+    #how-to-play { margin-top: 130px; }
+
+    /* Última sección: padding inferior de página */
+    #about { padding-bottom: 120px; }
+
+    /* manos_web — hover indica que es un botón */
+    .manos-link { display: block; }
+    .manos-link .web-svg {
+      transition: transform 0.25s ease, filter 0.25s ease;
+      cursor: pointer;
+    }
+    .manos-link:hover .web-svg {
+      transform: scale(1.025);
+      filter: drop-shadow(4px 8px 20px rgba(0,0,0,0.38));
+    }
+
+    /* ── GitHub & About Us ───────────────────────────────────────────────────── */
+    .repo-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      border: 2.5px solid #111;
+      border-radius: 4px;
+      padding: 18px 40px;
+      transition: background 0.2s, transform 0.2s;
+      text-shadow: 1px 2px 4px rgba(0,0,0,0.18);
+    }
+    .repo-link:hover {
+      background: rgba(0,0,0,0.06);
+      transform: translateY(-2px);
+    }
+    .repo-link-icon {
+      width: 32px; height: 32px;
+      fill: #111;
+      flex-shrink: 0;
+    }
+    .repo-link-text {
+      font-family: 'Erica One', sans-serif;
+      font-size: clamp(1rem, 1.6vw, 1.3rem);
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: #111;
+    }
+
+    .about-body {
+      max-width: 520px;
+      text-align: center;
+    }
+    .about-body p {
+      font-family: 'Erica One', sans-serif;
+      font-size: clamp(0.75rem, 1.1vw, 0.95rem);
+      color: rgba(0,0,0,0.55);
+      line-height: 1.7;
+      letter-spacing: 0.02em;
+    }
+
+    .section-title {
+      font-family: 'Erica One', sans-serif;
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #111;
+      margin-bottom: 48px;
+      text-shadow: 2px 4px 8px rgba(0,0,0,0.22), 1px 1px 0px rgba(0,0,0,0.14);
+    }
+
+    /* ── SVG images ──────────────────────────────────────────────────────────── */
+    .web-svg {
+      display: block;
+      width: 90vw;
+      max-width: 1100px;
+      height: auto;
+      filter: drop-shadow(3px 6px 12px rgba(0,0,0,0.28));
+    }
+
+    .manos-wrap { padding-bottom: 0; }
+    .manos-link { display: block; }
+
+    /* ── Zigzag de gestos ────────────────────────────────────────────────────── */
+    .gestures-grid {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 700px;
+      margin-top: 0;
+    }
+
+    .gesture-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 12px;
+      margin-top: -48px;
+    }
+    .gesture-item:first-child { margin-top: 0; }
+
+    .gesture-item.left  { flex-direction: row; }
+    .gesture-item.right { flex-direction: row-reverse; }
+
+    .gesture-item img {
+      width: clamp(75px, 7.5vw, 120px);
+      height: auto;
+      flex-shrink: 0;
+      display: block;
+      filter: drop-shadow(3px 6px 12px rgba(0,0,0,0.28));
+    }
+
+    .gesture-text { max-width: 170px; }
+
+    .gesture-name {
+      font-family: 'Erica One', sans-serif;
+      font-size: clamp(0.85rem, 1.3vw, 1.1rem);
+      text-transform: uppercase;
+      color: #111;
+      letter-spacing: 0.06em;
+      text-shadow: 1px 2px 4px rgba(0,0,0,0.20);
+    }
+
+    .gesture-desc {
+      font-family: 'Erica One', sans-serif;
+      font-size: clamp(0.62rem, 0.9vw, 0.78rem);
+      color: rgba(0,0,0,0.52);
+      margin-top: 4px;
+      line-height: 1.35;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Animaciones de entrada ──────────────────────────────────────────────── */
+    .anim {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .anim.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* Los títulos se mueven menos */
+    .section-title.anim { transform: translateY(14px); }
+    /* Personaje con leve escala */
+    .personaje-wrap.anim {
+      transform: translateY(20px) scale(0.98);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .personaje-wrap.anim.is-visible { transform: translateY(0) scale(1); }
+  </style>
+</head>
+<body>
+
+  <!-- Cables canvas — behind all content -->
+  <div id="cables-bg">
+    <canvas id="cables-canvas"></canvas>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <a href="#how-to-play">HOW TO PLAY</a>
+    <a href="#play">PLAY</a>
+    <a href="#about">ABOUT US</a>
+  </header>
+
+  <!-- Hero: title + personaje -->
+  <section class="hero">
+    <h1>Touching<br>Sound</h1>
+    <div class="personaje-wrap">
+      <img src="svg/personaje_web.svg" alt="Personaje" />
+    </div>
+  </section>
+
+  <!-- How to Play — zigzag de gestos -->
+  <div class="section-block" id="how-to-play">
+    <h2 class="section-title">How to Play</h2>
+    <div class="gestures-grid">
+      <div class="gesture-item left" style="padding-left:8%; padding-right:35%">
+        <img src="svg/pinch.svg" alt="Pinch" />
+        <div class="gesture-text">
+          <p class="gesture-name">Pinch</p>
+          <p class="gesture-desc">Choose your instrument.</p>
+        </div>
+      </div>
+      <div class="gesture-item right" style="padding-right:8%; padding-left:35%">
+        <img src="svg/fist.svg" alt="Fist" />
+        <div class="gesture-text">
+          <p class="gesture-name">Fist</p>
+          <p class="gesture-desc">Control the volume.</p>
+        </div>
+      </div>
+      <div class="gesture-item left" style="padding-left:8%; padding-right:35%">
+        <img src="svg/left_hand.svg" alt="Left Hand" />
+        <div class="gesture-text">
+          <p class="gesture-name">Left Hand</p>
+          <p class="gesture-desc">Control expression with tremolo.</p>
+        </div>
+      </div>
+      <div class="gesture-item right" style="padding-right:8%; padding-left:35%">
+        <img src="svg/right_hand.svg" alt="Right Hand" />
+        <div class="gesture-text">
+          <p class="gesture-name">Right Hand</p>
+          <p class="gesture-desc">Control note and chord.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Let's Play -->
+  <div class="section-block manos-wrap" id="play">
+    <h2 class="section-title">Let's Play</h2>
+    <a class="manos-link" href="index.html">
+      <img class="web-svg" src="svg/manos_web.svg" alt="Play the game" />
+    </a>
+  </div>
+
+  <!-- GitHub -->
+  <div class="section-block" id="github">
+    <h2 class="section-title">Source Code</h2>
+    <a class="repo-link" href="https://github.com/" target="_blank" rel="noopener">
+      <svg class="repo-link-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577
+          0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756
+          -1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237
+          1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305
+          -5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524
+          .117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005
+          2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118
+          3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823
+          1.102.823 2.222 0 1.606-.015 2.896-.015 3.286 0 .315.216.69.825.573C20.565
+          21.795 24 17.298 24 12c0-6.63-5.37-12-12-12z"/>
+      </svg>
+      <span class="repo-link-text">View on GitHub</span>
+    </a>
+  </div>
+
+  <!-- About Us -->
+  <div class="section-block" id="about">
+    <h2 class="section-title">About Us</h2>
+    <div class="about-body">
+      <p>Touching Sound is a final degree project exploring new ways to interact with music through hand gestures and computer vision. Built with MediaPipe and the Web Audio API, it lets anyone compose and loop music without touching a single button.</p>
+      <p style="margin-top:18px;">Created by Yago Tarrasó as part of a Bachelor's Degree in Digital Music Expression. The project blends design, technology and music into a single playful experience.</p>
+    </div>
+  </div>
+
+  <script>
+  /* ── Animaciones de entrada con IntersectionObserver ───────────────────── */
+  /* Se inicializa en window.load para que el layout tenga la altura real     */
+  window.addEventListener('load', function () {
+    // Marca todos los elementos como ocultos ANTES de observar
+    const animTargets = [
+      ...document.querySelectorAll('.section-title, .personaje-wrap, .web-svg, .repo-link, .about-body p')
+    ];
+    animTargets.forEach(el => el.classList.add('anim'));
+    document.querySelectorAll('.gesture-item').forEach(el => el.classList.add('anim'));
+
+    // Observer para elementos individuales
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+
+    animTargets.forEach(el => obs.observe(el));
+
+    // Observer para el grid (evita problema de márgenes negativos en gesture-items)
+    const gridObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.querySelectorAll('.gesture-item').forEach((item, i) => {
+          setTimeout(() => item.classList.add('is-visible'), i * 110);
+        });
+        gridObs.unobserve(entry.target);
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+    document.querySelectorAll('.gestures-grid').forEach(g => gridObs.observe(g));
+  });
+
+  /* ── Smooth scroll ──────────────────────────────────────────────────────── */
+  document.querySelectorAll('header a[href^="#"]').forEach(link => {
+    link.addEventListener('click', e => {
+      const target = document.querySelector(link.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      const start = window.scrollY;
+      const end   = target.getBoundingClientRect().top + start;
+      const dist  = Math.abs(end - start);
+      const duration = Math.min(600 + dist * 0.28, 1400);
+      let startTime = null;
+      const ease = t => t === 1 ? 1 : 1 - Math.pow(2, -8 * t);
+      const step = ts => {
+        if (!startTime) startTime = ts;
+        const p = Math.min((ts - startTime) / duration, 1);
+        window.scrollTo(0, start + (end - start) * ease(p));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  });
+
+  /* ── Cable physics animation ────────────────────────────────────────────── */
+  (function () {
+    'use strict';
+
+    /* ── Constants ── */
+    const N       = 68;     // points per cable
+    const TENSION = 0.44;   // string stiffness
+    const DAMPING = 0.973;  // energy loss per frame
+    const RESTORE = 0.013;  // pull-back to resting shape
+    const MOUSE_R = 90;     // mouse influence radius (px)
+    const PUSH    = 0.024;  // mouse push strength
+    const MAX_V   = 5;      // max velocity per point
+    const SMOOTH  = 0.50;   // spatial smoothing
+
+    const cv  = document.getElementById('cables-canvas');
+    const ctx = cv.getContext('2d');
+    const bg  = document.getElementById('cables-bg');
+
+    /* ── Mouse in document coordinates ── */
+    const mouse = { x: -999, y: -999, px: -999, py: -999 };
+    document.addEventListener('mousemove', e => {
+      mouse.px = mouse.x; mouse.py = mouse.y;
+      mouse.x  = e.clientX;
+      mouse.y  = e.clientY + window.scrollY;
+    });
+
+    /* ── Resize canvas to full page ── */
+    function resize() {
+      cv.width  = bg.offsetWidth  || window.innerWidth;
+      cv.height = bg.offsetHeight || document.body.scrollHeight;
+    }
+
+    /* ── Clamp helper ── */
+    const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+
+    /* ═══════════════════════════════════════════════════════════
+       CROSS-CABLE  — horizontal, y-displacement physics
+       Both endpoints span full page width (x: 0 → W)
+    ═══════════════════════════════════════════════════════════ */
+    function makeXCable(cfg) {
+      const c = Object.assign({}, cfg);
+      c.y = new Float32Array(N);
+      c.vy = new Float32Array(N);
+      c.ys = new Float32Array(N);
+      c.type = 'cross';
+      return c;
+    }
+
+    function xBaseY(c, i, t) {
+      const p  = i / (N - 1);
+      const H  = cv.height;
+      // Interpola entre extremo izquierdo y derecho para asimetría natural
+      const yL = (c.yFracL !== undefined ? c.yFracL : c.yFrac) * H;
+      const yR = (c.yFracR !== undefined ? c.yFracR : c.yFrac) * H;
+      const base = yL + (yR - yL) * p;
+      return base
+        + c.a1 * Math.sin(p * c.f1 * Math.PI) * Math.cos(t * c.s1 + c.p1)
+        + c.a2 * Math.sin(p * c.f2 * Math.PI) * Math.cos(t * c.s2 + c.p2);
+    }
+
+    function stepXCable(c, t) {
+      const W = cv.width;
+      const dvx = mouse.x - mouse.px, dvy = mouse.y - mouse.py;
+      const mspd = Math.sqrt(dvx*dvx + dvy*dvy);
+
+      for (let i = 1; i < N - 1; i++) {
+        const px   = i / (N - 1) * W;
+        const base = xBaseY(c, i, t);
+        const ten  = (c.y[i-1] + c.y[i+1] - 2*c.y[i]) * TENSION;
+        const res  = (base - c.y[i]) * RESTORE;
+        let push = 0;
+        if (mspd > 1.5 && mouse.x > 0) {
+          const dm = Math.sqrt((px - mouse.x)**2 + (c.ys[i] - mouse.y)**2);
+          if (dm < MOUSE_R) push = dvy * (1 - dm/MOUSE_R)**2 * PUSH;
+        }
+        c.vy[i] = clamp((c.vy[i] + ten + res + push) * DAMPING, -MAX_V, MAX_V);
+      }
+
+      c.y[0]     += (xBaseY(c, 0, t)     - c.y[0])     * 0.1;
+      c.y[N-1]   += (xBaseY(c, N-1, t)   - c.y[N-1])   * 0.1;
+      c.vy[0] = c.vy[N-1] = 0;
+      for (let i = 1; i < N-1; i++) c.y[i] += c.vy[i];
+
+      c.ys[0] = c.y[0]; c.ys[N-1] = c.y[N-1];
+      for (let i = 1; i < N-1; i++)
+        c.ys[i] = c.y[i]*(1-SMOOTH) + (c.y[i-1]+c.y[i+1])*0.5*SMOOTH;
+      for (let i = 1; i < N-1; i++)
+        c.ys[i] = c.ys[i]*(1-SMOOTH*0.5) + (c.ys[i-1]+c.ys[i+1])*0.5*(SMOOTH*0.5);
+    }
+
+    function drawXCable(c) {
+      const W = cv.width;
+      const pts = [];
+      for (let i = 0; i < N; i++) pts.push({ x: i/(N-1)*W, y: c.ys[i] });
+      drawShape(pts, c.thick);
+      const p0 = pts[0], pN = pts[N-1];
+      const a0 = Math.atan2(p0.y - pts[1].y, p0.x - pts[1].x);
+      const aN = Math.atan2(pN.y - pts[N-2].y, pN.x - pts[N-2].x);
+      if (c.leftEnd  === 'earbud') drawEarbud(p0.x, p0.y, a0, c.thick);
+      if (c.leftEnd  === 'jack')   drawJack(p0.x, p0.y, a0, c.thick);
+      if (c.rightEnd === 'earbud') drawEarbud(pN.x, pN.y, aN, c.thick);
+      if (c.rightEnd === 'jack')   drawJack(pN.x, pN.y, aN, c.thick);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       C-CABLE  — both endpoints on same side, C-shaped reach
+       side 'left': endpoints at x=0, cable extends rightward
+       side 'right': endpoints at x=W, cable extends leftward
+    ═══════════════════════════════════════════════════════════ */
+    function makeCCable(cfg) {
+      const c = Object.assign({}, cfg);
+      c.dx  = new Float32Array(N);
+      c.dvx = new Float32Array(N);
+      c.dxs = new Float32Array(N);
+      c.type = 'ccable';
+      return c;
+    }
+
+    function cBaseDX(c, i, t) {
+      const p    = i / (N - 1);
+      const W    = cv.width;
+      const sign = c.side === 'right' ? -1 : 1;
+      // C-shape: sin(pπ)  — una corcovada
+      // snake:   (1-cos(4pπ))/2 — dos corcovadas, ambas visibles en el mismo lado
+      const baseShape = c.shape === 'snake'
+        ? (1 - Math.cos(p * 4 * Math.PI)) / 2
+        : Math.sin(p * Math.PI);
+      return sign * (
+        c.reachFrac * W * baseShape
+        + c.a1 * Math.sin(p * Math.PI)       * Math.cos(t * c.s1 + c.p1)
+        + (c.a2||0) * Math.sin(p * 2*Math.PI) * Math.cos(t * (c.s2||0.007) + (c.p2||0))
+      );
+    }
+
+    function stepCCable(c, t) {
+      const W    = cv.width;
+      const H    = cv.height;
+      const sign = c.side === 'right' ? -1 : 1;
+      const edgeX = c.side === 'right' ? W : 0;
+      const y0 = c.y0Frac * H, y1 = c.y1Frac * H;
+      const dvx = mouse.x - mouse.px, dvy = mouse.y - mouse.py;
+      const mspd = Math.sqrt(dvx*dvx + dvy*dvy);
+
+      for (let i = 1; i < N - 1; i++) {
+        const p   = i / (N - 1);
+        const py  = y0 + (y1 - y0) * p;
+        const px  = edgeX + c.dxs[i];
+        const base = cBaseDX(c, i, t);
+        const ten  = (c.dx[i-1] + c.dx[i+1] - 2*c.dx[i]) * TENSION;
+        const res  = (base - c.dx[i]) * RESTORE;
+        let push = 0;
+        if (mspd > 1.5 && mouse.x > 0) {
+          const dm = Math.sqrt((px - mouse.x)**2 + (py - mouse.y)**2);
+          if (dm < MOUSE_R) push = dvx * sign * (1 - dm/MOUSE_R)**2 * PUSH;
+        }
+        c.dvx[i] = clamp((c.dvx[i] + ten + res + push) * DAMPING, -MAX_V, MAX_V);
+      }
+
+      c.dx[0] = c.dx[N-1] = 0;
+      c.dvx[0] = c.dvx[N-1] = 0;
+      for (let i = 1; i < N-1; i++) c.dx[i] += c.dvx[i];
+
+      c.dxs[0] = c.dx[0]; c.dxs[N-1] = c.dx[N-1];
+      for (let i = 1; i < N-1; i++)
+        c.dxs[i] = c.dx[i]*(1-SMOOTH) + (c.dx[i-1]+c.dx[i+1])*0.5*SMOOTH;
+      for (let i = 1; i < N-1; i++)
+        c.dxs[i] = c.dxs[i]*(1-SMOOTH*0.5) + (c.dxs[i-1]+c.dxs[i+1])*0.5*(SMOOTH*0.5);
+    }
+
+    function drawCCable(c) {
+      const W = cv.width, H = cv.height;
+      const edgeX = c.side === 'right' ? W : 0;
+      const y0 = c.y0Frac * H, y1 = c.y1Frac * H;
+      const pts = [];
+      for (let i = 0; i < N; i++) {
+        const p = i / (N - 1);
+        pts.push({ x: edgeX + c.dxs[i], y: y0 + (y1 - y0) * p });
+      }
+      drawShape(pts, c.thick);
+      const p0 = pts[0], pN = pts[N-1];
+      const a0 = Math.atan2(p0.y - pts[1].y, p0.x - pts[1].x);
+      const aN = Math.atan2(pN.y - pts[N-2].y, pN.x - pts[N-2].x);
+      if (c.topEnd === 'earbud') drawEarbud(p0.x, p0.y, a0, c.thick);
+      if (c.topEnd === 'jack')   drawJack(p0.x, p0.y, a0, c.thick);
+      if (c.botEnd === 'earbud') drawEarbud(pN.x, pN.y, aN, c.thick);
+      if (c.botEnd === 'jack')   drawJack(pN.x, pN.y, aN, c.thick);
+    }
+
+    /* ── Shared rendering ──────────────────────────────────────────────────── */
+    function drawShape(pts, tk) {
+      function trace(ox, oy) {
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x + ox, pts[0].y + oy);
+        for (let i = 1; i < pts.length - 1; i++) {
+          const mx = (pts[i].x + pts[i+1].x) / 2 + ox;
+          const my = (pts[i].y + pts[i+1].y) / 2 + oy;
+          ctx.quadraticCurveTo(pts[i].x + ox, pts[i].y + oy, mx, my);
+        }
+        ctx.lineTo(pts[pts.length-1].x + ox, pts[pts.length-1].y + oy);
+      }
+      ctx.save();
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      // Sombra
+      ctx.globalAlpha = 0.20;
+      ctx.lineWidth = tk + 5; ctx.strokeStyle = 'rgba(80,0,0,0.9)';
+      trace(tk * 0.30, tk * 0.45); ctx.stroke();
+      // Outline negro (cartoon)
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = tk + 2.5; ctx.strokeStyle = '#111';
+      trace(0, 0); ctx.stroke();
+      // Cuerpo rojo
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = tk; ctx.strokeStyle = '#c41800';
+      trace(0, 0); ctx.stroke();
+      // Brillo/reflejo blanco (franja superior)
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = tk * 0.28; ctx.strokeStyle = 'rgba(255,200,180,0.95)';
+      trace(-tk * 0.06, -tk * 0.28); ctx.stroke();
+      // Segundo reflejo más suave
+      ctx.globalAlpha = 0.20;
+      ctx.lineWidth = tk * 0.10; ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      trace(-tk * 0.10, -tk * 0.38); ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawEarbud(x, y, angle, tk) {
+      ctx.save();
+      ctx.translate(x, y); ctx.rotate(angle);
+      const r = tk * 2.0;
+      ctx.beginPath(); ctx.arc(r*0.2, r*0.25, r, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(80,0,0,0.18)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2);
+      ctx.fillStyle = '#7a1200'; ctx.fill();
+      ctx.lineWidth = 1.2; ctx.strokeStyle = '#c83020'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(-r*0.15, -r*0.15, r*0.5, 0, Math.PI*2);
+      ctx.fillStyle = '#550e00'; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-r*1.05, 0, r*0.6, r*0.44, 0, 0, Math.PI*2);
+      ctx.fillStyle = '#8a1500'; ctx.fill();
+      ctx.lineWidth = 0.8; ctx.strokeStyle = '#c83020'; ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawJack(x, y, angle, tk) {
+      ctx.save();
+      ctx.translate(x, y); ctx.rotate(angle);
+      const len = tk * 4.5;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(len, 0);
+      ctx.lineWidth = tk; ctx.strokeStyle = '#b81200'; ctx.lineCap = 'round'; ctx.stroke();
+      [len*0.55, len*0.72].forEach(ox => {
+        ctx.beginPath(); ctx.moveTo(ox, -tk*0.5); ctx.lineTo(ox, tk*0.5);
+        ctx.lineWidth = 2; ctx.strokeStyle = '#e05040'; ctx.stroke();
+      });
+      ctx.beginPath(); ctx.moveTo(len*0.78, 0); ctx.lineTo(len, 0);
+      ctx.lineWidth = tk*0.65; ctx.strokeStyle = '#e07060'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, tk*1.3, 0, Math.PI*2);
+      ctx.fillStyle = '#7a1200'; ctx.fill();
+      ctx.lineWidth = 1; ctx.strokeStyle = '#c83020'; ctx.stroke();
+      ctx.restore();
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CABLE DEFINITIONS
+       yFrac / y0Frac / y1Frac : fraction of total page height
+       reachFrac                : fraction of page width
+    ═══════════════════════════════════════════════════════════ */
+    let cables = [];
+
+    function initCables() {
+      cables = [
+
+        /* ── Cross cables — 4, agrupados en medio del título ── */
+        /* ── Cross cables — detrás del título, juntos ── */
+        makeXCable({ yFrac: 0.050, thick: 9,
+          a1: 36, f1: 2, p1: 0.0, s1: 0.016,
+          a2: 12, f2: 4, p2: 1.2, s2: 0.009,
+          leftEnd: 'earbud', rightEnd: 'jack' }),
+
+        makeXCable({ yFracL: 0.063, yFracR: 0.057, thick: 7.5,
+          a1: 30, f1: 2, p1: 1.3, s1: 0.013,
+          a2: 10, f2: 3, p2: 2.5, s2: 0.008,
+          leftEnd: 'jack', rightEnd: null }),
+
+        makeXCable({ yFracL: 0.073, yFracR: 0.080, thick: 6,
+          a1: 32, f1: 3, p1: 2.1, s1: 0.014,
+          a2:  9, f2: 5, p2: 0.6, s2: 0.010,
+          leftEnd: null, rightEnd: 'earbud' }),
+
+        makeXCable({ yFracL: 0.086, yFracR: 0.078, thick: 8,
+          a1: 28, f1: 2, p1: 3.0, s1: 0.012,
+          a2: 11, f2: 4, p2: 1.8, s2: 0.007,
+          leftEnd: 'earbud', rightEnd: 'jack' }),
+
+        /* ── Cables laterales — empiezan bien abajo en instrucciones ── */
+        /* modo 1 (a1/s1) = oscilación C,  modo 2 (a2/s2) = oscilación S */
+
+        /* izquierda — 3 cables con huecos entre ellos */
+        makeCCable({ side: 'left', shape: 'C',
+          y0Frac: 0.32, y1Frac: 0.44, reachFrac: 0.30, thick: 8,
+          a1: 18, s1: 0.014, p1: 1.1, a2: 0,
+          topEnd: 'earbud', botEnd: null }),
+
+        makeCCable({ side: 'left', shape: 'snake',
+          y0Frac: 0.52, y1Frac: 0.67, reachFrac: 0.28, thick: 7,
+          a1: 14, s1: 0.011, p1: 2.3, a2: 0,
+          topEnd: null, botEnd: 'jack' }),
+
+        makeCCable({ side: 'left', shape: 'C',
+          y0Frac: 0.77, y1Frac: 0.93, reachFrac: 0.33, thick: 9,
+          a1: 17, s1: 0.015, p1: 0.5, a2: 0,
+          topEnd: 'jack', botEnd: null }),
+
+        /* derecha — 3 cables desfasados respecto a izquierda */
+        makeCCable({ side: 'right', shape: 'snake',
+          y0Frac: 0.36, y1Frac: 0.5, reachFrac: 0.31, thick: 7.5,
+          a1: 20, s1: 0.013, p1: 0.3, a2: 0,
+          topEnd: 'jack', botEnd: null }),
+
+        makeCCable({ side: 'right', shape: 'C',
+          y0Frac: 0.62, y1Frac: 0.76, reachFrac: 0.27, thick: 8.5,
+          a1: 18, s1: 0.015, p1: 1.7, a2: 0,
+          topEnd: null, botEnd: 'earbud' }),
+
+        makeCCable({ side: 'right', shape: 'snake',
+          y0Frac: 0.89, y1Frac: 1.02, reachFrac: 0.35, thick: 6.5,
+          a1: 15, s1: 0.012, p1: 2.8, a2: 0,
+          topEnd: 'earbud', botEnd: null }),
+      ];
+
+      /* Initialize rest positions */
+      const W = cv.width, H = cv.height;
+      cables.forEach(c => {
+        if (c.type === 'cross') {
+          const yL = (c.yFracL !== undefined ? c.yFracL : c.yFrac) * H;
+          const yR = (c.yFracR !== undefined ? c.yFracR : c.yFrac) * H;
+          for (let i = 0; i < N; i++) {
+            const p = i / (N - 1);
+            c.y[i] = yL + (yR - yL) * p; c.vy[i] = 0; c.ys[i] = c.y[i];
+          }
+        } else {
+          const sign = c.side === 'right' ? -1 : 1;
+          for (let i = 0; i < N; i++) {
+            const p = i / (N - 1);
+            const baseShape = c.shape === 'snake'
+              ? (1 - Math.cos(p * 4 * Math.PI)) / 2
+              : Math.sin(p * Math.PI);
+            const v = sign * c.reachFrac * W * baseShape;
+            c.dx[i] = v; c.dvx[i] = 0; c.dxs[i] = v;
+          }
+        }
+      });
+    }
+
+    /* ── Main animation loop ──────────────────────────────────────────────── */
+    let t = 0;
+    function loop() {
+      if (cables.length) {
+        ctx.clearRect(0, 0, cv.width, cv.height);
+        cables.forEach(c => {
+          if (c.type === 'cross') { stepXCable(c, t); drawXCable(c); }
+          else                    { stepCCable(c, t); drawCCable(c); }
+        });
+      }
+      mouse.px = mouse.x; mouse.py = mouse.y;
+      t++;
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    /* Init on DOMContentLoaded, then refine once images have loaded */
+    document.addEventListener('DOMContentLoaded', () => {
+      resize(); initCables();
+    });
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const prevH = cv.height;
+        resize();
+        if (Math.abs(cv.height - prevH) > 50) initCables(); // reinit if page grew
+      }, 150);
+    });
+
+  })();
+  </script>
+</body>
+</html>
