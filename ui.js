@@ -10,12 +10,49 @@ let _bgColor  = { r: 0,  g: 0,  b: 0   };
 let _tgtColor = { r: 20, g: 80, b: 100 };
 const BG_LERP = 0.018;
 
+// ── Iconos de la paleta ───────────────────────────────────────────────────────
+// SVGs precargados y rasterizados en offscreen canvases para uso sin lag.
+// Las claves sin entrada (reverb, filter, waveforms) siguen usando fillText.
+const _ICON_PATHS = {
+  pad:      'svg/icons/icon_piano.svg',
+  bass:     'svg/icons/icon_bass.svg',
+  synth:    'svg/icons/icon_synth.svg',
+  perc:     'svg/icons/icon_drum.svg',
+  lead:     'svg/icons/icon_wave.svg',
+  drive:    'svg/icons/icon_dist.svg',
+  delay:    'svg/icons/icon_delay.svg',
+  flutter:  'svg/icons/icon_trem.svg',
+  clear:    'svg/icons/icon_mute.svg',
+  clearFx:  'svg/icons/icon_mute.svg',
+  hintMenu:     'svg/icons/icon_palette.svg',
+  hintMenuLeft: 'svg/icons/left_palette.svg',
+  hintRec:      'svg/icons/icon_record.svg',
+  hintBpm:      'svg/icons/icon_tempo.svg',
+};
+const _icons = {};   // key → offscreen HTMLCanvasElement (rasterizado 64×64)
+
+function _loadIcons() {
+  const SIZE    = 64;
+  const byPath  = {};   // evita crear dos canvases para el mismo archivo (mute compartido)
+  Object.entries(_ICON_PATHS).forEach(([key, src]) => {
+    if (byPath[src]) { _icons[key] = byPath[src]; return; }
+    const oc  = document.createElement('canvas');
+    oc.width  = SIZE; oc.height = SIZE;
+    const img = new Image();
+    img.onload = () => oc.getContext('2d').drawImage(img, 0, 0, SIZE, SIZE);
+    img.src    = src;
+    byPath[src]  = oc;
+    _icons[key]  = oc;
+  });
+}
+
 // ── Inicialización ────────────────────────────────────────────────────────────
 
 // Guarda las referencias al canvas y al vídeo, obtiene el contexto 2D.
 function init(video, canvas) {
   videoEl    = video;
   mainCanvas = canvas;
+  _loadIcons();
   mainCtx    = canvas.getContext('2d');
 }
 
@@ -179,8 +216,8 @@ function _drawBeatPulse(W, H, pulse) {
 // - Rojo pulsante con "● REC CAPA" cuando se está grabando.
 // - Se oculta (sin dibujar relleno) si no hay ningún bucle ni grabación activa.
 // Las marcas verticales indican los tiempos del compás (cada 8 pasos = 1 barra).
-const LOOP_BAR_H  = 5;    // altura de la barra en px
-const LOOP_BAR_Y  = 10;   // distancia al borde superior en px
+const LOOP_BAR_H  = 9;    // altura de la barra en px
+const LOOP_BAR_Y  = 12;   // distancia al borde superior en px
 const LOOP_BAR_PX = 16;   // margen horizontal en px
 
 function _drawLoopBar(W, loopPos, loopSteps, recording, recordTarget, hasAnyLoop) {
@@ -192,10 +229,21 @@ function _drawLoopBar(W, loopPos, loopSteps, recording, recordTarget, hasAnyLoop
 
   mainCtx.save();
 
-  // Pista de fondo (siempre visible)
-  mainCtx.fillStyle = 'rgba(255,255,255,0.06)';
-  _roundRect(x, y, barW, LOOP_BAR_H, 2);
+  // Sombra cartoon
+  mainCtx.globalAlpha = 0.28;
+  mainCtx.fillStyle   = '#000';
+  _roundRect(x + 2, y + 3, barW, LOOP_BAR_H, 3);
   mainCtx.fill();
+  mainCtx.globalAlpha = 1;
+
+  // Pista de fondo (siempre visible) con outline negro cartoon
+  mainCtx.fillStyle = 'rgba(30,30,40,0.72)';
+  _roundRect(x, y, barW, LOOP_BAR_H, 3);
+  mainCtx.fill();
+  mainCtx.strokeStyle = 'rgba(0,0,0,0.80)';
+  mainCtx.lineWidth   = 2;
+  _roundRect(x, y, barW, LOOP_BAR_H, 3);
+  mainCtx.stroke();
 
   // Marcas de tiempo (una por cada 8 pasos = cada negra)
   for (let i = 0; i < loopSteps; i += 8) {
@@ -238,7 +286,7 @@ function _drawLoopBar(W, loopPos, loopSteps, recording, recordTarget, hasAnyLoop
     labelText = '▶ LOOP';
   }
   mainCtx.fillStyle    = recording ? 'rgba(255,100,100,0.85)' : 'rgba(80,220,140,0.65)';
-  mainCtx.font         = 'bold 8px Helvetica Neue, sans-serif';
+  mainCtx.font         = 'bold 8px Montserrat, sans-serif';
   mainCtx.textAlign    = 'right';
   mainCtx.textBaseline = 'middle';
   mainCtx.fillText(labelText, W - LOOP_BAR_PX, y + LOOP_BAR_H / 2);
@@ -252,7 +300,7 @@ function _drawLoopBar(W, loopPos, loopSteps, recording, recordTarget, hasAnyLoop
 function _drawChordName(W, H, chordName) {
   mainCtx.save();
   mainCtx.fillStyle    = 'rgba(70,130,255,0.40)';
-  mainCtx.font         = `bold ${Math.round(H * 0.12)}px Helvetica Neue, sans-serif`;
+  mainCtx.font         = `bold ${Math.round(H * 0.12)}px Montserrat, sans-serif`;
   mainCtx.textAlign    = 'center';
   mainCtx.textBaseline = 'middle';
   mainCtx.fillText(chordName, W * 0.75, H / 2);
@@ -304,7 +352,7 @@ function _drawTempoSlider(W, H, bpm, frameHands) {
   mainCtx.lineWidth   = 1;
   _roundRect(bx, by, badgeW, badgeH, 5); mainCtx.stroke();
   mainCtx.fillStyle    = 'rgba(255,255,255,0.92)';
-  mainCtx.font         = 'bold 11px Helvetica Neue, sans-serif';
+  mainCtx.font         = 'bold 11px Montserrat, sans-serif';
   mainCtx.textAlign    = 'center';
   mainCtx.textBaseline = 'middle';
   mainCtx.fillText(`${bpm} BPM`, sliderX, by + badgeH / 2);
@@ -366,13 +414,13 @@ function _drawVolFader(W, H, layerKey, layerVolumes, handY) {
   mainCtx.lineWidth   = 1;
   _roundRect(bx, by, badgeW, badgeH, 5); mainCtx.stroke();
   mainCtx.fillStyle    = 'rgba(255,255,255,0.92)';
-  mainCtx.font         = 'bold 11px Helvetica Neue, sans-serif';
+  mainCtx.font         = 'bold 11px Montserrat, sans-serif';
   mainCtx.textAlign    = 'center'; mainCtx.textBaseline = 'middle';
   mainCtx.fillText(`${type.name.toUpperCase()}  ${pct}%`, sliderX, by + badgeH / 2);
 
   // Instrucción al pie del slider
   mainCtx.fillStyle    = `rgba(${r},${g},${b},0.45)`;
-  mainCtx.font         = '9px Helvetica Neue, sans-serif';
+  mainCtx.font         = '9px Montserrat, sans-serif';
   mainCtx.textAlign    = 'center'; mainCtx.textBaseline = 'top';
   mainCtx.fillText('move hand ↕  ·  pinch to confirm', sliderX, sliderY1 + 8);
 
@@ -384,8 +432,8 @@ function _drawVolFader(W, H, layerKey, layerVolumes, handY) {
 // (opciones de FX o formas de onda). El estado de cada menú viene del snapshot.
 // Mientras se acumula el dwell, se muestra un arco de progreso (no el menú completo).
 
-const MENU_RADIUS_PX = 125;   // radio del círculo de elementos
-const MENU_ITEM_R    = 27;    // radio de cada botón circular
+const MENU_RADIUS_PX = 135;   // radio del círculo de elementos
+const MENU_ITEM_R    = 36;    // radio de cada botón circular
 
 // Geometría del submenú (debe coincidir con las constantes de main.js)
 const SUB_RADIUS = 70;                    // px del centro del ítem a cada botón del submenú
@@ -425,10 +473,21 @@ function _drawPinchMenus(W, H, menuHands) {
     mainCtx.save();
 
     // Disco de fondo semiopaco para mejorar la legibilidad
-    mainCtx.fillStyle = 'rgba(0,0,0,0.40)';
-    mainCtx.beginPath();
-    mainCtx.arc(ox, oy, MENU_RADIUS_PX + MENU_ITEM_R + 14, 0, Math.PI * 2);
-    mainCtx.fill();
+    // Disco de fondo del menú — estilo cartoon
+    const bgR = MENU_RADIUS_PX + MENU_ITEM_R + 14;
+    // Sombra
+    mainCtx.save();
+    mainCtx.globalAlpha = 0.25;
+    mainCtx.fillStyle   = '#000';
+    mainCtx.beginPath(); mainCtx.arc(ox + 4, oy + 5, bgR, 0, Math.PI * 2); mainCtx.fill();
+    mainCtx.restore();
+    // Outline
+    mainCtx.strokeStyle = 'rgba(0,0,0,0.65)';
+    mainCtx.lineWidth   = 4;
+    mainCtx.beginPath(); mainCtx.arc(ox, oy, bgR, 0, Math.PI * 2); mainCtx.stroke();
+    // Fill
+    mainCtx.fillStyle = 'rgba(15,15,25,0.78)';
+    mainCtx.beginPath(); mainCtx.arc(ox, oy, bgR, 0, Math.PI * 2); mainCtx.fill();
 
     // Etiqueta central del menú izquierdo: EFECTOS o SONIDO según el modo
     if (!isRight) {
@@ -436,7 +495,7 @@ function _drawPinchMenus(W, H, menuHands) {
         ? 'EFECTOS'
         : 'SONIDO';
       mainCtx.fillStyle    = `rgba(${colorStr},0.35)`;
-      mainCtx.font         = 'bold 8px Helvetica Neue, sans-serif';
+      mainCtx.font         = 'bold 8px Montserrat, sans-serif';
       mainCtx.textAlign    = 'center';
       mainCtx.textBaseline = 'middle';
       mainCtx.fillText(ctxLabel, ox, oy);
@@ -448,7 +507,7 @@ function _drawPinchMenus(W, H, menuHands) {
       const ix    = ox + MENU_RADIUS_PX * Math.cos(angle);
       const iy    = oy + MENU_RADIUS_PX * Math.sin(angle);
       const hov   = menu.hover === key;
-      const itemR = hov ? MENU_ITEM_R * 1.20 : MENU_ITEM_R;   // crece 20% al hacer hover
+      const itemR = MENU_ITEM_R;
 
       // Determinar tipo de elemento y sus propiedades visuales
       let cr, cg, cb, label;
@@ -498,55 +557,63 @@ function _drawPinchMenus(W, H, menuHands) {
           ? (hov ? 1.0 : 0.55)
           : (hov ? 0.55 : 0.25);
 
-      // Radio (línea tenue de conexión desde el centro del menú al ítem)
+      // Línea de conexión desde el centro del menú al ítem
       mainCtx.strokeStyle = 'rgba(255,255,255,0.07)';
       mainCtx.lineWidth   = 1;
       mainCtx.beginPath(); mainCtx.moveTo(ox, oy); mainCtx.lineTo(ix, iy); mainCtx.stroke();
 
-      // Glow: gradiente radial más grande que el cuerpo (itemR×2.5).
-      // El centro del glow coincide con el centro del botón (ix, iy).
-      // El alpha del centro sube al 0.35 si está en hover o activo, 0.10 si no.
-      // Esto crea el efecto de "aura" alrededor del botón.
-      const glow = mainCtx.createRadialGradient(ix, iy, 0, ix, iy, itemR * 2.5);
-      glow.addColorStop(0, `rgba(${cr},${cg},${cb},${(hov || active) ? 0.35 : 0.10})`);
-      glow.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
-      mainCtx.fillStyle = glow;
-      mainCtx.beginPath(); mainCtx.arc(ix, iy, itemR * 2.5, 0, Math.PI * 2); mainCtx.fill();
+      // Sin círculo de fondo — solo icono flotante
+      mainCtx.save();
+      mainCtx.restore();
 
-      // Cuerpo del botón (círculo principal)
-      mainCtx.fillStyle = `rgba(${cr},${cg},${cb},${bodyA})`;
-      mainCtx.beginPath(); mainCtx.arc(ix, iy, itemR, 0, Math.PI * 2); mainCtx.fill();
-
-      // Anillo de estado: sólido si editing, punteado si active/looping
+      // Anillo de estado cartoon: outline negro + color encima
       if (active) {
+        const ringR = itemR + 6;
+        // Outline negro
+        mainCtx.strokeStyle = `rgba(0,0,0,${editing ? 0.85 : 0.50})`;
+        mainCtx.lineWidth   = editing ? 5 : 4;
+        mainCtx.setLineDash([]);
+        mainCtx.beginPath(); mainCtx.arc(ix, iy, ringR, 0, Math.PI * 2); mainCtx.stroke();
+        // Color por encima
         mainCtx.strokeStyle = editing
           ? 'rgba(255,255,255,0.92)'
-          : `rgba(${cr},${cg},${cb},0.75)`;
-        mainCtx.lineWidth   = editing ? 2.5 : 1.5;
-        if (!editing) mainCtx.setLineDash([3, 3]);
-        mainCtx.beginPath(); mainCtx.arc(ix, iy, itemR + 5, 0, Math.PI * 2); mainCtx.stroke();
+          : `rgba(${cr},${cg},${cb},0.85)`;
+        mainCtx.lineWidth   = editing ? 2.5 : 2;
+        if (!editing) mainCtx.setLineDash([4, 4]);
+        mainCtx.beginPath(); mainCtx.arc(ix, iy, ringR, 0, Math.PI * 2); mainCtx.stroke();
         mainCtx.setLineDash([]);
       }
 
-      // Anillo de hover (encima del anillo de estado)
+      // Hover: anillo blanco fino adicional
       if (hov) {
-        mainCtx.strokeStyle = `rgba(${colorStr},0.85)`;
-        mainCtx.lineWidth   = 2.5;
-        mainCtx.beginPath(); mainCtx.arc(ix, iy, itemR, 0, Math.PI * 2); mainCtx.stroke();
+        mainCtx.strokeStyle = 'rgba(255,255,255,0.70)';
+        mainCtx.lineWidth   = 1.5;
+        mainCtx.beginPath(); mainCtx.arc(ix, iy, itemR + 1.5, 0, Math.PI * 2); mainCtx.stroke();
       }
 
-      // Etiqueta de texto (ligeramente arriba si hay un badge L/R debajo)
+      // Icono o texto label
       const labelOffY = (!isRight && fxHand) ? -3 : 0;
-      mainCtx.fillStyle    = `rgba(255,255,255,${active ? 0.95 : (hov ? 0.90 : 0.60)})`;
-      mainCtx.font         = `${hov ? 'bold ' : ''}${hov ? 9 : 7}px Helvetica Neue, sans-serif`;
-      mainCtx.textAlign    = 'center'; mainCtx.textBaseline = 'middle';
-      mainCtx.fillText(label, ix, iy + labelOffY);
+      const iconCanvas = _icons[key];
+      if (iconCanvas) {
+        // Icono SVG prerasterizado, tamaño grande sin círculo de fondo
+        const iSz = itemR * 1.80;
+        mainCtx.save();
+        mainCtx.globalAlpha = 1.0;
+        mainCtx.drawImage(iconCanvas, ix - iSz / 2, iy - iSz / 2, iSz, iSz);
+        mainCtx.restore();
+      } else {
+        // Fallback texto para claves sin icono (reverb, filter, waveforms)
+        mainCtx.fillStyle    = `rgba(255,255,255,${active ? 0.95 : (hov ? 0.90 : 0.60)})`;
+        mainCtx.font         = `${hov ? 'bold ' : ''}${hov ? 9 : 7}px Montserrat, sans-serif`;
+        mainCtx.textAlign    = 'center'; mainCtx.textBaseline = 'middle';
+        mainCtx.fillText(label, ix, iy + labelOffY);
+      }
 
       // Badge L/R para efectos FX asignados (indica qué mano controla ese efecto)
       if (!isRight && fxHand) {
         const badgeColor = fxHand === 'R' ? '160,200,255' : '200,130,255';
         mainCtx.fillStyle    = `rgba(${badgeColor},0.95)`;
-        mainCtx.font         = `bold 6px Helvetica Neue, sans-serif`;
+        mainCtx.font         = `bold 6px Montserrat, sans-serif`;
         mainCtx.textAlign    = 'center'; mainCtx.textBaseline = 'middle';
         mainCtx.fillText(fxHand, ix, iy + 7);
       }
@@ -578,22 +645,41 @@ function _drawPinchMenus(W, H, menuHands) {
 function _drawSubMenu(ix, iy, angle, subHover, hasLoop) {
   // Helper interno para dibujar cada botón circular del submenú
   function _drawSubBtn(bx, by, rFill, gFill, bFill, label, hov, fontSize) {
-    const gBtn = mainCtx.createRadialGradient(bx, by, 0, bx, by, SUB_BTN_R * 2);
-    gBtn.addColorStop(0, `rgba(${rFill},${gFill},${bFill},${hov ? 0.55 : 0.20})`);
-    gBtn.addColorStop(1, `rgba(${rFill},${gFill},${bFill},0)`);
-    mainCtx.fillStyle = gBtn;
-    mainCtx.beginPath(); mainCtx.arc(bx, by, SUB_BTN_R * 2, 0, Math.PI * 2); mainCtx.fill();
-    mainCtx.fillStyle = hov
-      ? `rgba(${rFill},${gFill},${bFill},0.92)`
-      : `rgba(${rFill},${gFill},${bFill},0.38)`;
+    // Sombra cartoon
+    mainCtx.save();
+    mainCtx.globalAlpha = 0.30;
+    mainCtx.fillStyle   = '#000';
+    mainCtx.beginPath(); mainCtx.arc(bx + 2, by + 3, SUB_BTN_R, 0, Math.PI * 2); mainCtx.fill();
+    mainCtx.restore();
+
+    // Fill de color plano
+    mainCtx.fillStyle = `rgba(${rFill},${gFill},${bFill},${hov ? 0.95 : 0.75})`;
     mainCtx.beginPath(); mainCtx.arc(bx, by, SUB_BTN_R, 0, Math.PI * 2); mainCtx.fill();
-    mainCtx.strokeStyle = hov
-      ? `rgba(${Math.min(255,rFill+60)},${Math.min(255,gFill+60)},${Math.min(255,bFill+60)},0.95)`
-      : `rgba(${rFill},${gFill},${bFill},0.50)`;
-    mainCtx.lineWidth = hov ? 2 : 1;
-    mainCtx.beginPath(); mainCtx.arc(bx, by, SUB_BTN_R + (hov ? 3 : 0), 0, Math.PI * 2); mainCtx.stroke();
-    mainCtx.fillStyle    = `rgba(255,255,255,${hov ? 1.0 : 0.80})`;
-    mainCtx.font         = `${hov ? 'bold ' : ''}${fontSize}px Helvetica Neue, sans-serif`;
+
+    // Outline negro
+    mainCtx.strokeStyle = 'rgba(0,0,0,0.80)';
+    mainCtx.lineWidth   = 3;
+    mainCtx.beginPath(); mainCtx.arc(bx, by, SUB_BTN_R, 0, Math.PI * 2); mainCtx.stroke();
+
+    // Highlight top-left
+    mainCtx.save();
+    mainCtx.globalAlpha  = hov ? 0.45 : 0.28;
+    mainCtx.strokeStyle  = 'rgba(255,255,255,0.85)';
+    mainCtx.lineWidth    = 1.5;
+    mainCtx.beginPath();
+    mainCtx.arc(bx, by, SUB_BTN_R * 0.62, Math.PI * 1.05, Math.PI * 1.72);
+    mainCtx.stroke();
+    mainCtx.restore();
+
+    // Anillo hover
+    if (hov) {
+      mainCtx.strokeStyle = 'rgba(255,255,255,0.70)';
+      mainCtx.lineWidth   = 1.5;
+      mainCtx.beginPath(); mainCtx.arc(bx, by, SUB_BTN_R + 4, 0, Math.PI * 2); mainCtx.stroke();
+    }
+
+    mainCtx.fillStyle    = `rgba(255,255,255,${hov ? 1.0 : 0.90})`;
+    mainCtx.font         = `${fontSize}px Montserrat, sans-serif`;
     mainCtx.textAlign    = 'center';
     mainCtx.textBaseline = 'middle';
     mainCtx.fillText(label, bx, by);
@@ -614,7 +700,7 @@ function _drawSubMenu(ix, iy, angle, subHover, hasLoop) {
   } else {
     _drawSubBtn(volX, volY, 100, 100, 100, 'VOL', false, 8);
     mainCtx.fillStyle = 'rgba(160,160,160,0.50)';
-    mainCtx.font      = '6px Helvetica Neue, sans-serif';
+    mainCtx.font      = '6px Montserrat, sans-serif';
     mainCtx.textAlign = 'center'; mainCtx.textBaseline = 'top';
     mainCtx.fillText('🔒', volX, volY + SUB_BTN_R + 2);
   }
@@ -628,24 +714,46 @@ function _drawSubMenu(ix, iy, angle, subHover, hasLoop) {
   // Multiplicar todos los alphas por fxA hace el botón transparente sin condicionales extra.
   const fxA   = hasLoop ? 1.0 : 0.25;
 
-  // Glow del botón FX (cian, igual que el indicador FX en el chip de la barra inferior)
-  const gFx = mainCtx.createRadialGradient(fxX, fxY, 0, fxX, fxY, SUB_BTN_R * 2);
-  gFx.addColorStop(0, `rgba(80,200,255,${(fxHov ? 0.50 : 0.20) * fxA})`);
-  gFx.addColorStop(1, 'rgba(80,200,255,0)');
-  mainCtx.fillStyle = gFx;
-  mainCtx.beginPath(); mainCtx.arc(fxX, fxY, SUB_BTN_R * 2, 0, Math.PI * 2); mainCtx.fill();
+  // Botón FX con estilo cartoon (cian), opacidad reducida si no hay bucle
+  mainCtx.save();
+  mainCtx.globalAlpha = fxA;
 
-  mainCtx.fillStyle = fxHov ? `rgba(80,200,255,${0.92 * fxA})` : `rgba(80,200,255,${0.38 * fxA})`;
+  // Sombra
+  mainCtx.save();
+  mainCtx.globalAlpha = 0.30 * fxA;
+  mainCtx.fillStyle   = '#000';
+  mainCtx.beginPath(); mainCtx.arc(fxX + 2, fxY + 3, SUB_BTN_R, 0, Math.PI * 2); mainCtx.fill();
+  mainCtx.restore();
+
+  // Fill cian
+  mainCtx.fillStyle = `rgba(80,200,255,${fxHov ? 0.95 : 0.75})`;
   mainCtx.beginPath(); mainCtx.arc(fxX, fxY, SUB_BTN_R, 0, Math.PI * 2); mainCtx.fill();
-  mainCtx.strokeStyle = fxHov ? `rgba(160,230,255,${0.95 * fxA})` : `rgba(80,200,255,${0.50 * fxA})`;
-  mainCtx.lineWidth   = fxHov ? 2 : 1;
-  // Cuando está en hover, el anillo se expande 3px (SUB_BTN_R + 3) para dar feedback de selección.
-  mainCtx.beginPath(); mainCtx.arc(fxX, fxY, SUB_BTN_R + (fxHov ? 3 : 0), 0, Math.PI * 2); mainCtx.stroke();
-  mainCtx.fillStyle    = `rgba(255,255,255,${(fxHov ? 1.0 : 0.80) * fxA})`;
-  mainCtx.font         = `${fxHov ? 'bold ' : ''}7px Helvetica Neue, sans-serif`;
+
+  // Outline negro
+  mainCtx.strokeStyle = 'rgba(0,0,0,0.80)';
+  mainCtx.lineWidth   = 3;
+  mainCtx.beginPath(); mainCtx.arc(fxX, fxY, SUB_BTN_R, 0, Math.PI * 2); mainCtx.stroke();
+
+  // Highlight
+  mainCtx.save();
+  mainCtx.globalAlpha = fxHov ? 0.45 : 0.28;
+  mainCtx.strokeStyle = 'rgba(255,255,255,0.85)';
+  mainCtx.lineWidth   = 1.5;
+  mainCtx.beginPath(); mainCtx.arc(fxX, fxY, SUB_BTN_R * 0.62, Math.PI * 1.05, Math.PI * 1.72); mainCtx.stroke();
+  mainCtx.restore();
+
+  if (fxHov) {
+    mainCtx.strokeStyle = 'rgba(255,255,255,0.70)';
+    mainCtx.lineWidth   = 1.5;
+    mainCtx.beginPath(); mainCtx.arc(fxX, fxY, SUB_BTN_R + 4, 0, Math.PI * 2); mainCtx.stroke();
+  }
+
+  mainCtx.fillStyle    = `rgba(255,255,255,${fxHov ? 1.0 : 0.90})`;
+  mainCtx.font         = '7px Montserrat, sans-serif';
   mainCtx.textAlign    = 'center'; mainCtx.textBaseline = 'middle';
-  // '⊕ FX' cuando hay bucle (activo); '○ FX' cuando no (bloqueado — indica que falta grabar).
   mainCtx.fillText(hasLoop ? '⊕ FX' : '○ FX', fxX, fxY);
+
+  mainCtx.restore();
 }
 
 // ── Cursor de mano ────────────────────────────────────────────────────────────
@@ -672,11 +780,15 @@ function _drawHandCursor(W, H, hand, handY, handVelY, midPinchDwell, ringPinchDw
   const MIDDLE_SHOW = 0.30;   // umbral para mostrar el punto de corazón+pulgar
   const RING_SHOW   = 0.30;   // umbral para mostrar el punto de anular+pulgar
 
+  // Pre-calcular dwells para usarlos en la supresión de indicadores
+  const md = midPinchDwell[hand.label];
+  const rd = ringPinchDwell[hand.label];
+  const menuActive = hand.pinch.strength > PINCH_SHOW;
+  const anySelection = md > 0 || rd > 0 || menuActive;
+
   // Puntas de dedo con indicadores de gesto
   // j=0 pulgar | j=1 índice | j=2 corazón | j=3 anular | j=4 meñique
-  // Índice → MENU (ambas manos), corazón → REC (derecha), anular → BPM (derecha)
-  // Mientras el dedo está haciendo pinch, se oculta su círculo individual
-  // para que solo el círculo del pinch (que está entre los dos dedos) sea visible.
+  // Mientras hay una selección activa, solo se muestra el indicador del dedo relevante.
   if (hand.fingertips) {
     const now = performance.now();
     for (let j = 0; j < hand.fingertips.length; j++) {
@@ -689,8 +801,8 @@ function _drawHandCursor(W, H, hand, handY, handVelY, midPinchDwell, ringPinchDw
                       || (j === 2 && hand.middlePinch.strength > MIDDLE_SHOW)
                       || (j === 3 && hand.ringPinch.strength   > RING_SHOW);
 
-      // Punto pequeño de punta (solo cuando no está pinchando)
-      if (!isPinching) {
+      // Punto pequeño de punta: ocultar durante cualquier selección activa
+      if (!isPinching && j !== 1 && !anySelection) {
         mainCtx.fillStyle = `rgba(${colorStr},0.28)`;
         mainCtx.beginPath(); mainCtx.arc(tx, ty, 3.5, 0, Math.PI * 2); mainCtx.fill();
       }
@@ -699,28 +811,30 @@ function _drawHandCursor(W, H, hand, handY, handVelY, midPinchDwell, ringPinchDw
       const isRecFinger  = j === 2 && isRight;   // corazón — REC, solo derecha
       const isBpmFinger  = j === 3 && isRight;   // anular — BPM, solo derecha
 
-      // Anillo pulsante con etiqueta (solo cuando el dedo no está pinchando)
-      if ((isMenuFinger || isRecFinger || isBpmFinger) && !isPinching) {
-        let hintColor, hintLabel;
-        if      (isRecFinger)  { hintColor = '60,220,120';  hintLabel = 'REC';  }
-        else if (isBpmFinger)  { hintColor = '255,210,80';  hintLabel = 'BPM';  }
-        else                   { hintColor = colorStr;       hintLabel = 'MENU'; }
+      // Qué dedo es relevante según la selección activa
+      const isRelevant = md > 0 ? isRecFinger
+                       : rd > 0 ? isBpmFinger
+                       : menuActive ? isMenuFinger
+                       : true;
+
+      // Icono pulsante: solo mostrar si no hay otra selección activa en otro dedo
+      if ((isMenuFinger || isRecFinger || isBpmFinger) && !isPinching && isRelevant) {
+        const hintIconKey = isRecFinger ? 'hintRec'
+                          : isBpmFinger ? 'hintBpm'
+                          : isRight     ? 'hintMenu'
+                          :               'hintMenuLeft';
+        const hintIcon = _icons[hintIconKey];
 
         // Pulso lento (~0.6 Hz) con offset por dedo para que no se sincronicen
         const pulse = 0.5 + 0.5 * Math.sin(now * 0.0038 + j * 1.3);
-        const ringA = 0.22 + pulse * 0.35;
-        const ringR = 9 + pulse * 3;
 
-        mainCtx.strokeStyle = `rgba(${hintColor},${ringA})`;
-        mainCtx.lineWidth   = 1.5;
-        mainCtx.beginPath(); mainCtx.arc(tx, ty, ringR, 0, Math.PI * 2); mainCtx.stroke();
-
-        // Etiqueta diminuta bajo el anillo
-        mainCtx.fillStyle    = `rgba(${hintColor},${0.40 + pulse * 0.30})`;
-        mainCtx.font         = '6px Helvetica Neue, sans-serif';
-        mainCtx.textAlign    = 'center';
-        mainCtx.textBaseline = 'top';
-        mainCtx.fillText(hintLabel, tx, ty + ringR + 3);
+        if (hintIcon) {
+          const iSz = 38;
+          mainCtx.save();
+          mainCtx.globalAlpha = 0.40 + pulse * 0.50;
+          mainCtx.drawImage(hintIcon, tx - iSz / 2, ty - iSz / 2, iSz, iSz);
+          mainCtx.restore();
+        }
       }
     }
   }
@@ -757,26 +871,6 @@ function _drawHandCursor(W, H, hand, handY, handVelY, midPinchDwell, ringPinchDw
   mainCtx.fillStyle = glow;
   mainCtx.beginPath(); mainCtx.arc(pcx, pcy, glowR, 0, Math.PI * 2); mainCtx.fill();
 
-  // Carril vertical de expresión: muestra visualmente el rango de movimiento de la mano.
-  // laneX: posición horizontal del carril (82% = derecha, 18% = izquierda).
-  // laneH: altura del carril = 70% de la pantalla.
-  // laneY0: el carril empieza al 15% desde arriba (deja margen para la barra de bucle y el HUD).
-  // thumbY: posición del thumb dentro del carril, calculada como:
-  //   laneY0 + handY × laneH, donde handY es 0 (arriba) a 1 (abajo).
-  //   Cuando la mano está arriba (handY≈0) → thumbY≈laneY0 (thumb al principio del carril).
-  //   Cuando la mano está abajo (handY≈1) → thumbY≈laneY0+laneH (thumb al final).
-  const laneX  = isRight ? W * 0.82 : W * 0.18;
-  const laneH  = H * 0.70;
-  const laneY0 = H * 0.15;
-  const thumbY = laneY0 + handY[hand.label] * laneH;
-
-  mainCtx.strokeStyle = `rgba(${colorStr},0.10)`;
-  mainCtx.lineWidth   = 1.5;
-  mainCtx.lineCap     = 'round';
-  mainCtx.beginPath(); mainCtx.moveTo(laneX, laneY0); mainCtx.lineTo(laneX, laneY0 + laneH); mainCtx.stroke();
-
-  mainCtx.fillStyle = `rgba(${colorStr},0.55)`;
-  mainCtx.beginPath(); mainCtx.arc(laneX, thumbY, 5, 0, Math.PI * 2); mainCtx.fill();
 
   // Punto de aproximación del pinch corazón+pulgar (REC, verde)
   // Aparece gradualmente al acercar los dedos, antes de que empiece el dwell.
@@ -784,21 +878,20 @@ function _drawHandCursor(W, H, hand, handY, handVelY, midPinchDwell, ringPinchDw
     const mpx = (1 - hand.middlePinch.point.x) * W;
     const mpy = hand.middlePinch.point.y * H;
     const ms  = Math.max(0, (hand.middlePinch.strength - MIDDLE_SHOW) / (1 - MIDDLE_SHOW));
-    mainCtx.fillStyle = `rgba(60,220,120,${0.25 + ms * 0.50})`;
+    mainCtx.fillStyle = `rgba(255,60,60,${0.25 + ms * 0.50})`;
     mainCtx.beginPath(); mainCtx.arc(mpx, mpy, 3 + ms * 4, 0, Math.PI * 2); mainCtx.fill();
   }
   // Arco de dwell del corazón (REC): barre 360° mientras se acumula el dwell
-  const md = midPinchDwell[hand.label];
   if (md > 0) {
     const mpx      = (1 - hand.middlePinch.point.x) * W;
     const mpy      = hand.middlePinch.point.y * H;
     const endAngle = -Math.PI / 2 + md * Math.PI * 2;
-    mainCtx.strokeStyle = 'rgba(60,220,120,0.75)';
+    mainCtx.strokeStyle = 'rgba(255,60,60,0.75)';
     mainCtx.lineWidth   = 3;
     mainCtx.lineCap     = 'round';
     mainCtx.beginPath(); mainCtx.arc(mpx, mpy, 22, -Math.PI / 2, endAngle); mainCtx.stroke();
-    mainCtx.fillStyle    = 'rgba(60,220,120,0.45)';
-    mainCtx.font         = '6px Helvetica Neue, sans-serif';
+    mainCtx.fillStyle    = 'rgba(255,60,60,0.45)';
+    mainCtx.font         = '6px Montserrat, sans-serif';
     mainCtx.textAlign    = 'center'; mainCtx.textBaseline = 'middle';
     mainCtx.fillText('REC', mpx, mpy + 30);
   }
@@ -812,7 +905,6 @@ function _drawHandCursor(W, H, hand, handY, handVelY, midPinchDwell, ringPinchDw
     mainCtx.beginPath(); mainCtx.arc(rpx, rpy, 3 + rs * 4, 0, Math.PI * 2); mainCtx.fill();
   }
   // Arco de dwell del anular (BPM): mismo esquema que el corazón
-  const rd = ringPinchDwell[hand.label];
   if (rd > 0) {
     const rpx      = (1 - hand.ringPinch.point.x) * W;
     const rpy      = hand.ringPinch.point.y * H;
@@ -822,7 +914,7 @@ function _drawHandCursor(W, H, hand, handY, handVelY, midPinchDwell, ringPinchDw
     mainCtx.lineCap     = 'round';
     mainCtx.beginPath(); mainCtx.arc(rpx, rpy, 22, -Math.PI / 2, endAngle); mainCtx.stroke();
     mainCtx.fillStyle    = 'rgba(255,210,80,0.45)';
-    mainCtx.font         = '6px Helvetica Neue, sans-serif';
+    mainCtx.font         = '6px Montserrat, sans-serif';
     mainCtx.textAlign    = 'center'; mainCtx.textBaseline = 'middle';
     mainCtx.fillText('BPM', rpx, rpy + 30);
   }
@@ -840,7 +932,7 @@ function _drawHandCursor(W, H, hand, handY, handVelY, midPinchDwell, ringPinchDw
     mainCtx.lineWidth   = 1;
     _roundRect(bx, by, bw, bh, 4); mainCtx.stroke();
     mainCtx.fillStyle    = `rgba(${fcr},${fcg},${fcb},1.0)`;
-    mainCtx.font         = 'bold 7px Helvetica Neue, sans-serif';
+    mainCtx.font         = 'bold 7px Montserrat, sans-serif';
     mainCtx.textAlign    = 'center';
     mainCtx.textBaseline = 'middle';
     mainCtx.fillText(fxLabel, pcx, by + bh / 2);
@@ -862,7 +954,7 @@ function _drawLayerBar(W, H, editingLayer, layerModes, layerMuted, recordTarget,
 
   if (visibleKeys.length === 0) {
     mainCtx.fillStyle    = 'rgba(255,255,255,0.12)';
-    mainCtx.font         = '11px Helvetica Neue, sans-serif';
+    mainCtx.font         = '11px Montserrat, sans-serif';
     mainCtx.textAlign    = 'center';
     mainCtx.textBaseline = 'middle';
     mainCtx.fillText('pellizca para activar instrumentos', W / 2, H - 32);
@@ -888,8 +980,15 @@ function _drawLayerBar(W, H, editingLayer, layerModes, layerMuted, recordTarget,
     const isFx      = layerFxModes?.[key] ?? false;
     const midX      = x + chipW / 2;   // centro horizontal del chip
 
+    // Sombra cartoon
+    mainCtx.globalAlpha = 0.30;
+    mainCtx.fillStyle   = '#000';
+    _roundRect(x + 2, cy - chipH / 2 + 3, chipW, chipH, 5);
+    mainCtx.fill();
+    mainCtx.globalAlpha = 1;
+
     // Fondo del chip: gris si muted, cian-tinted si FX, color de la capa si normal
-    const fillA = isMuted ? 0.06 : (isEdit ? 0.28 : 0.12);
+    const fillA = isMuted ? 0.10 : (isEdit ? 0.35 : 0.18);
     if (isMuted) {
       mainCtx.fillStyle = `rgba(80,80,80,${fillA})`;
     } else if (isFx) {
@@ -899,30 +998,32 @@ function _drawLayerBar(W, H, editingLayer, layerModes, layerMuted, recordTarget,
     }
     _roundRect(x, cy - chipH / 2, chipW, chipH, 5); mainCtx.fill();
 
-    // Borde del chip: rojo pulsante si grabando, blanco sólido si editing,
-    // cian punteado si FX, color de la capa punteado si en bucle
+    // Borde cartoon: outline negro primero, luego color encima
+    mainCtx.strokeStyle = 'rgba(0,0,0,0.80)';
+    mainCtx.lineWidth   = 3;
+    mainCtx.setLineDash([]);
+    _roundRect(x, cy - chipH / 2, chipW, chipH, 5); mainCtx.stroke();
+
     if (isRec) {
-      const alpha = 0.70 + Math.sin(now * 0.006) * 0.25;
+      const alpha = 0.80 + Math.sin(now * 0.006) * 0.20;
       mainCtx.strokeStyle = `rgba(255,60,60,${alpha})`;
-      mainCtx.lineWidth   = 2;
+      mainCtx.lineWidth   = 1.5;
     } else if (isEdit) {
-      mainCtx.strokeStyle = isFx ? 'rgba(100,210,255,0.90)' : 'rgba(255,255,255,0.85)';
+      mainCtx.strokeStyle = isFx ? 'rgba(100,210,255,0.90)' : 'rgba(255,255,255,0.90)';
       mainCtx.lineWidth   = 1.5;
     } else if (isFx) {
-      mainCtx.strokeStyle = 'rgba(80,190,240,0.55)';
-      mainCtx.lineWidth   = 1;
-      mainCtx.setLineDash([4, 3]);
+      mainCtx.strokeStyle = 'rgba(80,190,240,0.70)';
+      mainCtx.lineWidth   = 1.5;
     } else {
-      mainCtx.strokeStyle = `rgba(${r},${g},${b},0.50)`;
-      mainCtx.lineWidth   = 1;
-      mainCtx.setLineDash([3, 3]);
+      mainCtx.strokeStyle = `rgba(${r},${g},${b},0.75)`;
+      mainCtx.lineWidth   = 1.5;
     }
     _roundRect(x, cy - chipH / 2, chipW, chipH, 5); mainCtx.stroke();
     mainCtx.setLineDash([]);
 
     // Nombre de la capa
     mainCtx.fillStyle    = `rgba(255,255,255,${isEdit ? 0.95 : 0.65})`;
-    mainCtx.font         = `${isEdit ? 'bold ' : ''}9px Helvetica Neue, sans-serif`;
+    mainCtx.font         = `${isEdit ? 'bold ' : ''}9px Montserrat, sans-serif`;
     mainCtx.textAlign    = 'center';
     mainCtx.textBaseline = 'middle';
     mainCtx.fillText(type.name.toUpperCase(), midX, cy - 2);
@@ -936,7 +1037,7 @@ function _drawLayerBar(W, H, editingLayer, layerModes, layerMuted, recordTarget,
     else if (isEdit)   { tag = '✎ EDIT';  tagColor = 'rgba(255,255,255,0.55)'; }
     else               { tag = '↻ LOOP';  tagColor = `rgba(${r},${g},${b},0.70)`; }
     mainCtx.fillStyle    = tagColor;
-    mainCtx.font         = `${isFx ? 'bold ' : ''}6px Helvetica Neue, sans-serif`;
+    mainCtx.font         = `${isFx ? 'bold ' : ''}6px Montserrat, sans-serif`;
     mainCtx.textAlign    = 'center';
     mainCtx.textBaseline = 'middle';
     mainCtx.fillText(tag, midX, cy + 9);
@@ -960,7 +1061,7 @@ function _drawLayerBar(W, H, editingLayer, layerModes, layerMuted, recordTarget,
       mainCtx.arc(midX, cy, chipH * 0.42, -Math.PI / 2, arcEnd);
       mainCtx.stroke();
       mainCtx.fillStyle    = 'rgba(255,220,100,0.95)';
-      mainCtx.font         = 'bold 10px Helvetica Neue, sans-serif';
+      mainCtx.font         = 'bold 10px Montserrat, sans-serif';
       mainCtx.textAlign    = 'center'; mainCtx.textBaseline = 'middle';
       mainCtx.fillText(beatIdx, midX, cy - 1);
     }
