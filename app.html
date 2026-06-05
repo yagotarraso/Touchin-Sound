@@ -10,6 +10,16 @@
 </head>
 <body>
 
+  <!-- Overlay: pedir al usuario que gire el dispositivo en portrait mode -->
+  <div id="rotate-overlay">
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="18" y="4" width="28" height="46" rx="5" stroke="white" stroke-width="3"/>
+      <path d="M10 38 C4 44 4 54 10 58 L26 58" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <polyline points="20,52 26,58 20,64" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <p>Gira el dispositivo</p>
+  </div>
+
   <video id="video" playsinline></video>
   <canvas id="mainCanvas"></canvas>
 
