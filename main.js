@@ -257,19 +257,16 @@ function _processRtControl() {
     case 'pad':
       Audio.setPadChord(rY);           // mano derecha arriba = acorde alto (I..VII)
       Audio.setPadTremolo(1 - lY);     // mano izquierda arriba = más tremolo
-      Audio.setPadFilter(lOpen);       // mano izquierda abierta = sonido brillante
       Audio.setLayerVolume('pad',   Math.min(1.2, rOpen * 1.2));
       break;
     case 'bass':
       Audio.setBassGroove(1 - rY);     // mano derecha arriba = groove más complejo
       Audio.setBassGate(1 - lY);       // mano izquierda arriba = más gate/pulso
-      Audio.setBassFilter(lOpen);
       Audio.setLayerVolume('bass',  Math.min(1.2, rOpen * 1.2));
       break;
     case 'synth':
       Audio.setSynthArpLen(rY);        // mano derecha arriba = arpegio más largo
       Audio.setSynthTremolo(1 - lY);   // mano izquierda arriba = más tremolo
-      Audio.setSynthFilter(lOpen);
       Audio.setLayerVolume('synth', Math.min(1.2, rOpen * 1.2));
       break;
     case 'perc':
@@ -279,7 +276,6 @@ function _processRtControl() {
     case 'lead':
       Audio.setLeadNote(rY);           // mano derecha arriba = nota más alta
       Audio.setLeadTremolo(1 - lY);    // mano izquierda arriba = más tremolo
-      Audio.setLeadFilter(lOpen);
       Audio.setLayerVolume('lead',  Math.min(1.2, rOpen * 1.2));
       break;
   }
@@ -898,8 +894,10 @@ function renderLoop(ts) {
 }
 
 // Oculta el tutorial, inicializa el audio y arranca el bucle de renderizado.
+// Guard: si ya está corriendo, solo ocultar el tutorial (evita doble renderLoop).
 function start() {
   tutorialEl.classList.add('hidden');
+  if (running) return;
   running = true;
   Audio.init();
   Audio.startSequencer();
