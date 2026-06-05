@@ -490,12 +490,12 @@ function _playDrum(name, vol, pitch, time, stopTime, fadeTime) {
     g.gain.exponentialRampToValueAtTime(0.001, t + fadeTime);
   } else {
     g.gain.value = clampedVol;
-    // src.stop() en el reloj AC: el source deja de generar audio en ese instante exacto
-    if (stopTime != null && stopTime > t) src.stop(stopTime);
   }
   // Cadena: source → gain → rhythmBus. El rhythmBus envía al master y al reverb/delay.
   src.connect(g); g.connect(rhythmBus);
   src.start(t);   // programa el inicio en el reloj AC — sample-accurate
+  // stop() DEBE llamarse después de start() — la Web Audio API lanza InvalidStateError si no
+  if (!fadeTime && stopTime != null && stopTime > t) src.stop(stopTime);
 }
 
 // Dispara el fill automático de toms al final de cada ciclo de 2 barras.

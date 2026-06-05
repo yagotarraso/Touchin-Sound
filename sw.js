@@ -263,11 +263,15 @@ self.addEventListener('fetch', event => {
   // Recursos externos (CDN de MediaPipe, etc.) → siempre red
   if (url.origin !== self.location.origin) return;
 
+  // No interceptar navegaciones HTML — dejar que vayan directo a la red.
+  // Las navegaciones a /app, / etc. fallan si el SW intenta fetchearlas
+  // porque Cloudflare las sirve con rewrites que el SW no puede seguir.
+  if (event.request.mode === 'navigate') return;
+
   const req = new Request(event.request, { redirect: 'follow' });
 
-  // Cache-first: sirve desde precache si existe, si no va a la red.
-  // NO se cachea dinámicamente para evitar cascadas de operaciones IDB
-  // que acumulan memoria y crashean el tab bajo carga de MediaPipe + 60fps.
+  // Cache-first para assets (JS, CSS, WAVs, SVGs, fuentes).
+  // Sin caching dinámico para evitar cascadas de operaciones IDB.
   event.respondWith(
     caches.match(req).then(cached => cached || fetch(req))
   );
