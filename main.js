@@ -933,13 +933,33 @@ function _tutGoTo(idx) {
   _tutScene = Math.max(0, Math.min(LAST_SCENE, idx));
   scenes[_tutScene].classList.add('active');
   dots[_tutScene].classList.add('active');
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   tutHint.textContent = _tutScene === LAST_SCENE
-    ? '— Press any key to start —'
-    : '— Press any key to continue —';
+    ? (isTouch ? '— Tap to start —'    : '— Press any key to start —')
+    : (isTouch ? '— Tap to continue —' : '— Press any key to continue —');
+}
+
+// ── Pantalla completa + orientación landscape ─────────────────────────────────
+// Se solicita en la primera interacción del tutorial (toque o tecla).
+// Requiere un "user gesture" — por eso no se llama en el load.
+// screen.orientation.lock('landscape') anula el bloqueo de rotación del SO.
+let _fullscreenDone = false;
+async function _requestFullscreenLandscape() {
+  if (_fullscreenDone) return;
+  _fullscreenDone = true;
+  try {
+    const el = document.documentElement;
+    if      (el.requestFullscreen)       await el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+  } catch (_) { /* desktop o iOS — ignorar */ }
+  try {
+    if (screen.orientation?.lock) await screen.orientation.lock('landscape');
+  } catch (_) { /* ignorar si el navegador no lo permite */ }
 }
 
 // Avanza una escena o, si ya estamos en la última, lanza la aplicación.
 function _tutAdvance() {
+  _requestFullscreenLandscape();
   if (_tutScene < LAST_SCENE) {
     _tutGoTo(_tutScene + 1);
   } else {
@@ -953,6 +973,14 @@ function _tutAdvance() {
     start();
   }
 }
+
+// Toque / clic en el tutorial (móvil)
+tutorialEl.addEventListener('pointerdown', e => {
+  // Ignorar si el puntero es un ratón — ya lo maneja el keydown
+  if (e.pointerType === 'mouse') return;
+  e.preventDefault();
+  _tutAdvance();
+});
 
 // Listener global de teclado:
 // - Con el tutorial visible: cualquier tecla imprimible/enter/espacio/flecha avanza escena.
