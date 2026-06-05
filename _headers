@@ -7,6 +7,9 @@
 
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
+
+/app.html
+  Cache-Control: no-cache, no-store, must-revalidate
   Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://*.jsdelivr.net blob: data: mediastream:; media-src 'self' blob: mediastream:; connect-src 'self' https://cdn.jsdelivr.net;
 
 /sw.js

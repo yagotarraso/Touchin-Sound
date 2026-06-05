@@ -1,3 +1,2 @@
 # Cloudflare Pages — Redirects
-# Sirve landing.html en la raíz sin cambiar la URL del navegador (rewrite 200).
-/ /landing.html 200
+# index.html = landing (raíz), app.html = juego

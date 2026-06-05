@@ -7,8 +7,8 @@ const CACHE = 'touching-sound-v1';
 // Assets locales a precachear en el install
 const PRECACHE = [
   '/',
-  '/landing.html',
   '/index.html',
+  '/app.html',
   '/style.css',
   '/main.js',
   '/audio.js',
