@@ -1,0 +1,24 @@
+# Cloudflare Pages — Headers
+# Los assets estáticos se cachean un año en el cliente (inmutables por versión de SW).
+# Los HTML nunca se cachean para que el SW actualizado se detecte siempre.
+
+/landing.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/*.js
+  Cache-Control: public, max-age=3600
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/svg/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/samples/*
+  Cache-Control: public, max-age=31536000, immutable

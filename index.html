@@ -54,7 +54,6 @@
   <!-- HUD -->
   <div id="hud">
     <div class="hud-label" id="leftLabel">izq · expresión</div>
-    <div class="hud-atmo" id="atmoLabel">Float</div>
     <div class="hud-label" id="rightLabel">der · melodía</div>
   </div>
 
@@ -63,5 +62,10 @@
   <script src="gestures.js"></script>
   <script src="ui.js"></script>
   <script src="main.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  </script>
 </body>
 </html>

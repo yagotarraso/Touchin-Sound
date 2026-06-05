@@ -18,7 +18,7 @@
 
     body {
       font-family: 'Erica One', sans-serif;
-      background: #c6cdd4;
+      background: #ededed;
       color: #111;
       overflow-x: hidden;
       position: relative; /* stacking context for cables canvas */
@@ -40,7 +40,7 @@
     header {
       position: relative;
       z-index: 10;
-      background: #c6cdd4;
+      background: #ededed;
       width: 100%;
       padding: 12px 48px;
       display: flex;
@@ -796,6 +796,11 @@
     });
 
   })();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
   </script>
 </body>
 </html>
