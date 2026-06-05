@@ -263,22 +263,12 @@ self.addEventListener('fetch', event => {
   // Recursos externos (CDN de MediaPipe, etc.) → siempre red
   if (url.origin !== self.location.origin) return;
 
-  // Reescribir la request con redirect:'follow' para que el SW siga
-  // los redirects de Cloudflare en vez de devolverlos como error.
   const req = new Request(event.request, { redirect: 'follow' });
 
+  // Cache-first: sirve desde precache si existe, si no va a la red.
+  // NO se cachea dinámicamente para evitar cascadas de operaciones IDB
+  // que acumulan memoria y crashean el tab bajo carga de MediaPipe + 60fps.
   event.respondWith(
-    caches.match(req).then(cached => {
-      if (cached) return cached;
-      return fetch(req).then(response => {
-        // Solo cachear respuestas completas (no opacas ni redirigidas)
-        if (!response || response.status !== 200 || response.type === 'opaqueredirect') {
-          return response;
-        }
-        const clone = response.clone();
-        caches.open(CACHE).then(cache => cache.put(req, clone));
-        return response;
-      });
-    })
+    caches.match(req).then(cached => cached || fetch(req))
   );
 });

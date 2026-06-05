@@ -118,9 +118,20 @@ function initHands() {
 }
 
 // Inicia la cámara y comienza a enviar frames al modelo de manos.
+// _frameProcessing: lock que evita encolar frames si MediaPipe aún no terminó el anterior.
+// Sin este lock, los frames se acumulan en memoria (~3.5MB cada uno) hasta crashear el tab.
+let _frameProcessing = false;
 function startCamera() {
   camera = new Camera(videoEl, {
-    onFrame: async () => { if (running) await handsModel.send({ image: videoEl }); },
+    onFrame: async () => {
+      if (!running || _frameProcessing) return;
+      _frameProcessing = true;
+      try {
+        await handsModel.send({ image: videoEl });
+      } finally {
+        _frameProcessing = false;
+      }
+    },
     width: 1280, height: 720,
   });
   camera.start();
