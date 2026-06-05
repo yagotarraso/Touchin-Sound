@@ -263,14 +263,20 @@ self.addEventListener('fetch', event => {
   // Recursos externos (CDN de MediaPipe, etc.) → siempre red
   if (url.origin !== self.location.origin) return;
 
+  // Reescribir la request con redirect:'follow' para que el SW siga
+  // los redirects de Cloudflare en vez de devolverlos como error.
+  const req = new Request(event.request, { redirect: 'follow' });
+
   event.respondWith(
-    caches.match(event.request).then(cached => {
+    caches.match(req).then(cached => {
       if (cached) return cached;
-      // No estaba en cache → red y guardar para la próxima vez
-      return fetch(event.request).then(response => {
-        if (!response || response.status !== 200) return response;
+      return fetch(req).then(response => {
+        // Solo cachear respuestas completas (no opacas ni redirigidas)
+        if (!response || response.status !== 200 || response.type === 'opaqueredirect') {
+          return response;
+        }
         const clone = response.clone();
-        caches.open(CACHE).then(cache => cache.put(event.request, clone));
+        caches.open(CACHE).then(cache => cache.put(req, clone));
         return response;
       });
     })
