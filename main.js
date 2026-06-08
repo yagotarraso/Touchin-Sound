@@ -1125,13 +1125,10 @@ function _showSilentHint() {
   function dismiss() {
     if (dismissed) return;
     dismissed = true;
+    _showSilentHint();           // mostrar mute hint antes de que empiece el fade
     hint.classList.add('hiding');
     window.removeEventListener('resize', onResize);
-    // Cuando el safari-hint termina de desaparecer → mostrar silent-hint
-    setTimeout(() => {
-      hint.remove();
-      _showSilentHint();   // ← aquí, de forma secuencial y garantizada
-    }, 520);
+    setTimeout(() => hint.remove(), 520);
   }
 
   function onContinue() {
