@@ -1039,12 +1039,14 @@ window.addEventListener('keydown', e => {
 
 window.addEventListener('resize', () => UI.resize());
 
-// ── Safari: ocultar barra del navegador antes del tutorial ────────────────────
-// Solo se activa en Safari mobile (no Chrome/Firefox en iOS).
-// Muestra un overlay scrollable — cuando el usuario desliza y la barra desaparece,
-// window.innerHeight aumenta y lo detectamos para comenzar el tutorial.
+// ── Safari: instrucciones para ocultar la barra antes del tutorial ───────────
+// Solo Safari iOS (no Chrome/Firefox/otros en iOS que también reportan "safari").
+// Muestra un overlay con pasos escritos + botón "Continuar".
+// Bonus: si se detecta que la barra ya se ocultó (height increase), se descarta solo.
 (function initSafariHint() {
-  const ua  = navigator.userAgent;
+  const ua = navigator.userAgent;
+  // Safari iOS: contiene "Safari" pero NO contiene Chrome, CriOS (Chrome iOS),
+  // FxiOS (Firefox iOS), OPiOS (Opera iOS), ni "Android"
   const isSafariMobile = /safari/i.test(ua)
     && !/crios|fxios|opios|chrome|android/i.test(ua)
     && _isTouch;
@@ -1052,48 +1054,46 @@ window.addEventListener('resize', () => UI.resize());
   if (!isSafariMobile) return;
 
   const hint = document.getElementById('safari-hint');
+  const btn  = document.getElementById('safari-hint-btn');
   if (!hint) return;
 
-  // Mostrar el overlay y ocultar el tutorial hasta que la barra desaparezca
-  hint.style.display = 'block';
+  // Mostrar el overlay; mantener tutorial oculto (pointer-events off) hasta que se descarte
+  hint.style.display              = 'flex';
   tutorialEl.style.opacity        = '0';
   tutorialEl.style.pointerEvents  = 'none';
   tutorialEl.style.transition     = 'opacity 0.5s ease';
 
-  let baseH   = 0;   // altura de referencia con barra visible (en landscape)
-  let done    = false;
+  let dismissed = false;
 
   function dismiss() {
-    if (done) return;
-    done = true;
+    if (dismissed) return;
+    dismissed = true;
     hint.classList.add('hiding');
+    window.removeEventListener('resize', onResize);
     setTimeout(() => {
       hint.remove();
-      tutorialEl.style.opacity       = '1';
+      tutorialEl.style.opacity      = '1';
       tutorialEl.style.pointerEvents = '';
     }, 520);
-    window.removeEventListener('resize', onResize);
-    window.removeEventListener('orientationchange', onResize);
   }
 
+  // Botón "Continuar" → descarta manualmente
+  if (btn) {
+    btn.addEventListener('touchstart', e => { e.preventDefault(); dismiss(); }, { passive: false });
+    btn.addEventListener('click', dismiss);
+  }
+
+  // Auto-detección bonus: si la barra se oculta sola (landscape + height increase)
+  let baseH = 0;
   function onResize() {
-    const landscape = window.innerWidth > window.innerHeight;
-
-    // Si estamos en portrait, reiniciamos la referencia para cuando rote
-    if (!landscape) { baseH = 0; return; }
-
-    // Primera medición en landscape: guardar como referencia (barra visible)
-    if (baseH === 0) { baseH = window.innerHeight; return; }
-
-    // Si la altura aumentó ≥25px respecto a la referencia → barra oculta
-    if (window.innerHeight >= baseH + 25) dismiss();
+    if (dismissed) return;
+    if (window.innerWidth <= window.innerHeight) { baseH = 0; return; } // portrait → reset
+    if (baseH === 0) { baseH = window.innerHeight; return; }            // primera medición
+    if (window.innerHeight >= baseH + 25) dismiss();                    // barra oculta
   }
-
   window.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', () => setTimeout(onResize, 300));
-
-  // Medición inicial (puede que ya estén en landscape)
-  onResize();
+  window.addEventListener('orientationchange', () => setTimeout(onResize, 350));
+  onResize(); // comprobación inicial
 })();
 
 })();

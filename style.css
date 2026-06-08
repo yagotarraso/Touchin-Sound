@@ -290,56 +290,95 @@ html, body {
   text-align: center;
 }
 
-/* ── Overlay Safari: ocultar barra del navegador ────────────────────────────── */
+/* ── Overlay Safari: instrucciones para ocultar barra ───────────────────────── */
 #safari-hint {
-  display: none;                /* se muestra solo desde JS si es Safari mobile */
+  display: none;
   position: fixed;
   inset: 0;
   z-index: 99999;
   background: #000;
-  /* Overflow para que el usuario pueda hacer scroll y ocultar la barra */
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
+  align-items: center;
+  justify-content: center;
 }
 
 #safari-hint-inner {
-  /* Doble altura de pantalla para que haya contenido que scrollear */
-  min-height: 200vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 20px;
-  padding: 40px 32px;
-  /* El contenido visible está centrado en la primera mitad */
-  padding-top: 30vh;
+  gap: 24px;
+  padding: 40px 36px;
+  max-width: 420px;
+  text-align: center;
 }
 
 .safari-hint-title {
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.80rem;
-  letter-spacing: 0.28em;
+  font-size: 0.72rem;
+  letter-spacing: 0.30em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.30);
 }
 
 .safari-hint-sub {
   font-family: 'Montserrat', sans-serif;
-  font-size: 1rem;
-  line-height: 1.8;
-  letter-spacing: 0.06em;
-  text-align: center;
-  color: rgba(255,255,255,0.80);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.70);
 }
 
-.safari-hint-arrow {
+.safari-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.safari-steps li {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.85);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 14px 18px;
+  text-align: left;
+}
+
+.safari-steps strong {
+  color: #fff;
+}
+
+.safari-step-icon {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+#safari-hint-btn {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.88rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(255,255,255,0.10);
+  border: 1.5px solid rgba(255,255,255,0.35);
+  border-radius: 8px;
+  padding: 14px 36px;
+  cursor: pointer;
   margin-top: 8px;
-  animation: safariArrow 1.4s ease-in-out infinite;
+  transition: background 0.2s, border-color 0.2s;
+  -webkit-appearance: none;
 }
-
-@keyframes safariArrow {
-  0%, 100% { transform: translateY(0);    opacity: 0.5; }
-  50%       { transform: translateY(-12px); opacity: 1;   }
+#safari-hint-btn:active {
+  background: rgba(255,255,255,0.22);
+  border-color: rgba(255,255,255,0.70);
 }
 
 #safari-hint.hiding {

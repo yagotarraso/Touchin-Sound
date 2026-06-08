@@ -10,17 +10,40 @@
 </head>
 <body>
 
-  <!-- Overlay Safari: ocultar la barra del navegador antes de empezar -->
+  <!-- Overlay Safari: instrucciones para ocultar la barra del navegador -->
   <div id="safari-hint">
     <div id="safari-hint-inner">
       <p class="safari-hint-title">Touching Sound</p>
-      <p class="safari-hint-sub">Para una mejor experiencia,<br>desliza hacia arriba para ocultar<br>la barra del navegador.</p>
-      <div class="safari-hint-arrow">
-        <svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <line x1="16" y1="48" x2="16" y2="4" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-          <polyline points="6,14 16,4 26,14" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
-      </div>
+      <p class="safari-hint-sub">Para una mejor experiencia,<br>oculta la barra del navegador:</p>
+
+      <ol class="safari-steps">
+        <li>
+          <span class="safari-step-icon">
+            <!-- Icono: barra con "..." -->
+            <svg width="44" height="22" viewBox="0 0 44 22" fill="none">
+              <rect x="1" y="1" width="42" height="20" rx="5" stroke="white" stroke-width="1.5"/>
+              <circle cx="16" cy="11" r="1.8" fill="white"/>
+              <circle cx="22" cy="11" r="1.8" fill="white"/>
+              <circle cx="28" cy="11" r="1.8" fill="white"/>
+            </svg>
+          </span>
+          Pulsa los <strong>tres puntos</strong> en la barra de búsqueda
+        </li>
+        <li>
+          <span class="safari-step-icon">
+            <!-- Icono: checkmark / list -->
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <rect x="1" y="1" width="20" height="20" rx="4" stroke="white" stroke-width="1.5"/>
+              <line x1="5" y1="8"  x2="17" y2="8"  stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="5" y1="11" x2="17" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="5" y1="14" x2="13" y2="14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </span>
+          Selecciona <strong>Ocultar barra de herramientas</strong>
+        </li>
+      </ol>
+
+      <button id="safari-hint-btn">Continuar →</button>
     </div>
   </div>
 
