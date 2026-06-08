@@ -947,11 +947,23 @@ let _fullscreenDone = false;
 async function _requestFullscreenLandscape() {
   if (_fullscreenDone) return;
   _fullscreenDone = true;
+
+  // 1. Pedir permiso de cámara ANTES del fullscreen.
+  //    Si lo pedimos después, el navegador sale del fullscreen para mostrar el diálogo
+  //    y ya no vuelve. Al pedirlo aquí, el diálogo aparece antes de entrar en fullscreen.
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    stream.getTracks().forEach(t => t.stop()); // solo queremos el permiso, no el stream
+  } catch (_) { /* permiso denegado o desktop sin cámara — continuar */ }
+
+  // 2. Fullscreen (ya sin interrupción de permisos)
   try {
     const el = document.documentElement;
     if      (el.requestFullscreen)       await el.requestFullscreen();
     else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
   } catch (_) { /* desktop o iOS — ignorar */ }
+
+  // 3. Bloquear orientación landscape (anula el bloqueo de rotación del SO)
   try {
     if (screen.orientation?.lock) await screen.orientation.lock('landscape');
   } catch (_) { /* ignorar si el navegador no lo permite */ }
@@ -974,13 +986,14 @@ function _tutAdvance() {
   }
 }
 
-// Toque / clic en el tutorial (móvil)
-tutorialEl.addEventListener('pointerdown', e => {
-  // Ignorar si el puntero es un ratón — ya lo maneja el keydown
-  if (e.pointerType === 'mouse') return;
-  e.preventDefault();
+// Toque en el tutorial (móvil).
+// Se usa touchstart (no pointerdown) porque en iOS es más fiable para detectar el primer toque.
+// { passive: false } permite llamar a preventDefault() para evitar el doble-tap zoom.
+// { capture: true } intercepta el evento antes de que lo absorba cualquier elemento hijo (img, dots).
+tutorialEl.addEventListener('touchstart', e => {
+  e.preventDefault();   // evita zoom en doble tap y el delay de 300ms de iOS
   _tutAdvance();
-});
+}, { passive: false, capture: true });
 
 // Listener global de teclado:
 // - Con el tutorial visible: cualquier tecla imprimible/enter/espacio/flecha avanza escena.

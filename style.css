@@ -47,6 +47,9 @@ html, body {
   background: #000;
   z-index: 10;
   transition: opacity 0.6s ease;
+  touch-action: manipulation;   /* elimina el delay de 300ms en iOS al tocar */
+  user-select: none;            /* evita que el toque seleccione texto/imágenes */
+  -webkit-user-select: none;
 }
 #tutorial.hidden { opacity: 0; pointer-events: none; }
 
