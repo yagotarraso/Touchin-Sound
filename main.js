@@ -1070,10 +1070,11 @@ function _showSilentHint() {
   if (!el) return;
 
   el.style.display = 'flex';
-  _safariHintActive = true;
+  // Nota: _safariHintActive ya está true (puesto por initSafariHint o aquí directamente)
+  if (!_safariHintActive) _safariHintActive = true;
 
   function closeSilent() {
-    _safariHintActive = false;
+    _safariHintActive = false; // ahora sí liberamos el tutorial
     el.classList.add('hiding');
     setTimeout(() => el.remove(), 420);
   }
@@ -1084,20 +1085,13 @@ function _showSilentHint() {
   }
 }
 
-// Para iOS no-Safari: mostrar el aviso de silencio en el primer toque de pantalla
+// Para iOS no-Safari (Chrome iOS, etc.): mostrar solo el aviso de silencio
 (function() {
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isSafariUA = /safari/i.test(navigator.userAgent)
-    && !/crios|fxios|opios|chrome|android/i.test(navigator.userAgent);
-  if (!isIOS || isSafariUA) return; // Safari tiene su propio flujo via safari-hint
-
-  function onFirstTouch() {
-    document.removeEventListener('touchstart', onFirstTouch, true);
-    document.removeEventListener('click',      onFirstTouch, true);
-    _showSilentHint();
-  }
-  document.addEventListener('touchstart', onFirstTouch, { capture: true, once: true });
-  document.addEventListener('click',      onFirstTouch, { capture: true, once: true });
+  const ua = navigator.userAgent;
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isSafariUA = /safari/i.test(ua) && !/crios|fxios|opios|chrome|android/i.test(ua);
+  if (!isIOS || isSafariUA) return;
+  _showSilentHint();
 })();
 
 // ── Safari: instrucciones para ocultar la barra antes del tutorial ───────────
@@ -1123,28 +1117,29 @@ function _showSilentHint() {
   const btn  = document.getElementById('safari-hint-btn');
   if (!hint) return;
 
-  // Mostrar el hint. El tutorial sigue detrás (z-index del hint lo tapa).
-  // NO tocamos los estilos del tutorial — demasiada fuente de bugs.
+  // Mostrar safari-hint Y silent-hint simultáneamente.
+  // Safari-hint tiene z-index 99999, silent-hint z-index 99998.
+  // El usuario ve safari-hint primero; cuando lo descarta, silent-hint ya está visible detrás.
   hint.style.display = 'flex';
-  _safariHintActive  = true;   // bloquear taps del tutorial mientras el hint está visible
+  _showSilentHint();          // silent-hint aparece detrás ya desde el principio
+  _safariHintActive  = true;  // se mantiene activo hasta que se cierre el SILENT hint
 
   let dismissed = false;
 
   function dismiss() {
     if (dismissed) return;
     dismissed = true;
-    _safariHintActive = false; // permitir taps del tutorial
+    // NO cambiamos _safariHintActive aquí — el silent-hint sigue bloqueando el tutorial
     hint.classList.add('hiding');
     window.removeEventListener('resize', onResize);
     setTimeout(() => hint.remove(), 520);
   }
 
-  // Al continuar: pide permiso de cámara, cierra el safari hint
-  // y muestra la pantalla de "desactiva el modo silencio".
+  // Al continuar: pide permiso de cámara y cierra el safari hint.
+  // El silent-hint ya visible debajo toma el protagonismo automáticamente.
   function onContinue() {
     _requestCameraPermission();
     dismiss();
-    _showSilentHint();
   }
   if (btn) {
     btn.addEventListener('touchstart', e => { e.preventDefault(); onContinue(); }, { passive: false });

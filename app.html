@@ -12,18 +12,35 @@
 
   <!-- Overlay: modo silencio físico del iPhone -->
   <div id="silent-hint">
-    <div id="silent-hint-inner">
+    <div id="safari-hint-inner">
       <p class="safari-hint-title">Touching Sound</p>
-      <!-- Icono del interruptor de silencio del iPhone -->
-      <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="18" y="4" width="16" height="44" rx="4" stroke="white" stroke-width="2.5"/>
-        <rect x="21" y="8" width="10" height="10" rx="2" fill="white" opacity="0.3"/>
-        <path d="M8 16 L8 36" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
-        <circle cx="8" cy="14" r="3" fill="#ff6b35"/>
-        <line x1="4" y1="10" x2="12" y2="38" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
-      </svg>
-      <p class="safari-hint-sub">Asegúrate de que el modo<br><strong>silencio está desactivado.</strong></p>
-      <p class="silent-hint-desc">El botón físico lateral del iPhone<br>debe mostrar el lado <strong>sin naranja</strong>.</p>
+      <p class="safari-hint-sub">Para escuchar el audio,<br>desactiva el modo silencio:</p>
+
+      <ol class="safari-steps">
+        <li>
+          <span class="safari-step-icon">
+            <!-- Icono: interruptor lateral iPhone -->
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <rect x="8" y="1" width="6" height="20" rx="3" stroke="white" stroke-width="1.5"/>
+              <rect x="9.5" y="3" width="3" height="4" rx="1" fill="white" opacity="0.4"/>
+              <line x1="3" y1="4" x2="3" y2="18" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="step-text">El interruptor lateral <strong>no debe mostrar naranja</strong></span>
+        </li>
+        <li>
+          <span class="safari-step-icon">
+            <!-- Icono: volumen / altavoz -->
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <polygon points="3,8 3,14 7,14 12,18 12,4 7,8" stroke="white" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+              <path d="M15 8 C17 9.5 17 12.5 15 14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M17.5 6 C20.5 8.5 20.5 13.5 17.5 16" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="step-text">Sube el <strong>volumen del dispositivo</strong> para escuchar</span>
+        </li>
+      </ol>
+
       <button id="silent-hint-btn">Entendido →</button>
     </div>
   </div>
