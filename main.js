@@ -990,13 +990,24 @@ function _tutAdvance() {
 }
 
 // Toque en el tutorial (móvil).
-// Se usa touchstart (no pointerdown) porque en iOS es más fiable para detectar el primer toque.
-// { passive: false } permite llamar a preventDefault() para evitar el doble-tap zoom.
-// { capture: true } intercepta el evento antes de que lo absorba cualquier elemento hijo (img, dots).
-tutorialEl.addEventListener('touchstart', e => {
-  e.preventDefault();   // evita zoom en doble tap y el delay de 300ms de iOS
+// Usamos touchstart Y click para máxima compatibilidad con Safari iOS.
+// El debounce de 400ms evita que ambos eventos disparen _tutAdvance dos veces en el mismo toque.
+let _lastTutTouch = 0;
+function _tutTap() {
+  const now = Date.now();
+  if (now - _lastTutTouch < 400) return;
+  _lastTutTouch = now;
   _tutAdvance();
+}
+
+// touchstart: respuesta inmediata sin delay de 300ms
+tutorialEl.addEventListener('touchstart', e => {
+  e.preventDefault();
+  _tutTap();
 }, { passive: false, capture: true });
+
+// click: fallback para Safari y otros navegadores donde touchstart puede fallar
+tutorialEl.addEventListener('click', () => _tutTap());
 
 // Listener global de teclado:
 // - Con el tutorial visible: cualquier tecla imprimible/enter/espacio/flecha avanza escena.
