@@ -1096,7 +1096,11 @@ window.addEventListener('resize', () => UI.resize());
     window.removeEventListener('resize', onResize);
     setTimeout(() => {
       hint.remove();
-      tutorialEl.style.opacity      = '1';
+      // IMPORTANTE: limpiar el inline style (no poner '1') para que el CSS tenga control.
+      // Si pusieramos style.opacity='1', ese inline sobreescribiría el opacity:0 de .hidden
+      // cuando start() añade esa clase — el tutorial quedaría visible bloqueando el juego.
+      tutorialEl.style.opacity      = '';   // ← quitar inline, dejar que CSS mande
+      tutorialEl.style.transition   = '';   // ← limpiar también la transición
       tutorialEl.style.pointerEvents = '';
     }, 520);
   }

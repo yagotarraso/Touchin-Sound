@@ -249,10 +249,11 @@ html, body {
   transform: scale(1.4);
 }
 .tutorial-hint {
-  font-family: 'Erica One', sans-serif;
-  font-size: 1rem;
-  color: rgba(255,255,255,0.55);
-  letter-spacing: 0.05em;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.50);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   margin: 0;
 }
 .tutorial-keys {
