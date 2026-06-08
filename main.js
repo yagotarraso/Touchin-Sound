@@ -1039,4 +1039,61 @@ window.addEventListener('keydown', e => {
 
 window.addEventListener('resize', () => UI.resize());
 
+// ── Safari: ocultar barra del navegador antes del tutorial ────────────────────
+// Solo se activa en Safari mobile (no Chrome/Firefox en iOS).
+// Muestra un overlay scrollable — cuando el usuario desliza y la barra desaparece,
+// window.innerHeight aumenta y lo detectamos para comenzar el tutorial.
+(function initSafariHint() {
+  const ua  = navigator.userAgent;
+  const isSafariMobile = /safari/i.test(ua)
+    && !/crios|fxios|opios|chrome|android/i.test(ua)
+    && _isTouch;
+
+  if (!isSafariMobile) return;
+
+  const hint = document.getElementById('safari-hint');
+  if (!hint) return;
+
+  // Mostrar el overlay y ocultar el tutorial hasta que la barra desaparezca
+  hint.style.display = 'block';
+  tutorialEl.style.opacity        = '0';
+  tutorialEl.style.pointerEvents  = 'none';
+  tutorialEl.style.transition     = 'opacity 0.5s ease';
+
+  let baseH   = 0;   // altura de referencia con barra visible (en landscape)
+  let done    = false;
+
+  function dismiss() {
+    if (done) return;
+    done = true;
+    hint.classList.add('hiding');
+    setTimeout(() => {
+      hint.remove();
+      tutorialEl.style.opacity       = '1';
+      tutorialEl.style.pointerEvents = '';
+    }, 520);
+    window.removeEventListener('resize', onResize);
+    window.removeEventListener('orientationchange', onResize);
+  }
+
+  function onResize() {
+    const landscape = window.innerWidth > window.innerHeight;
+
+    // Si estamos en portrait, reiniciamos la referencia para cuando rote
+    if (!landscape) { baseH = 0; return; }
+
+    // Primera medición en landscape: guardar como referencia (barra visible)
+    if (baseH === 0) { baseH = window.innerHeight; return; }
+
+    // Si la altura aumentó ≥25px respecto a la referencia → barra oculta
+    if (window.innerHeight >= baseH + 25) dismiss();
+  }
+
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', () => setTimeout(onResize, 300));
+
+  // Medición inicial (puede que ya estén en landscape)
+  onResize();
+})();
+
 })();
