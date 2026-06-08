@@ -251,7 +251,7 @@ html, body {
 .tutorial-hint {
   font-family: 'Montserrat', sans-serif;
   font-size: 0.78rem;
-  color: rgba(255,255,255,0.50);
+  color: #fff;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   margin: 0;

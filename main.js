@@ -991,6 +991,11 @@ function _tutAdvance() {
       console.log('[tut] juego iniciado');
     } catch (err) {
       console.error('[tut] ERROR al arrancar:', err);
+      // Mostrar error en pantalla para depurar en móvil sin consola
+      const dbg = document.createElement('div');
+      dbg.style.cssText = 'position:fixed;inset:0;background:#000;color:#f55;font:14px monospace;padding:20px;z-index:99999;overflow:auto;white-space:pre-wrap;';
+      dbg.textContent = 'ERROR AL ARRANCAR:\n' + (err?.stack || err);
+      document.body.appendChild(dbg);
     }
   }
 }
@@ -1011,7 +1016,10 @@ function _tutTap() {
 
 function _tutShouldHandle() {
   if (tutorialEl.classList.contains('hidden')) return false; // juego en marcha
-  if (document.getElementById('safari-hint'))  return false; // hint safari visible
+  // El elemento safari-hint SIEMPRE está en el DOM (display:none por CSS).
+  // Solo bloqueamos si JS lo ha puesto display:flex (hint activamente visible).
+  const hint = document.getElementById('safari-hint');
+  if (hint && hint.style.display === 'flex') return false;
   return true;
 }
 
