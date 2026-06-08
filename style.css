@@ -316,6 +316,12 @@ html, body {
   line-height: 1.7;
   letter-spacing: 0.03em;
   color: rgba(255,255,255,0.55);
+  text-align: center;
+}
+/* Asegurar Montserrat en todos los textos de los overlays */
+.safari-hint-title,
+.safari-hint-sub {
+  font-family: 'Montserrat', sans-serif;
 }
 #silent-hint-btn {
   font-family: 'Montserrat', sans-serif;
@@ -389,26 +395,40 @@ html, body {
 
 .safari-steps li {
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   line-height: 1.5;
   color: rgba(255,255,255,0.85);
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 10px;
-  padding: 14px 18px;
+  padding: 12px 16px;
   text-align: left;
 }
 
+/* Cada texto de paso ocupa el espacio restante y envuelve correctamente */
+.step-text {
+  flex: 1;
+  min-width: 0;        /* permite que flex item se encoja */
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: rgba(255,255,255,0.85);
+}
+
+.step-text strong,
 .safari-steps strong {
   color: #fff;
+  font-weight: 600;
 }
 
 .safari-step-icon {
   flex-shrink: 0;
-  opacity: 0.75;
+  display: flex;
+  align-items: center;
+  opacity: 0.80;
 }
 
 #safari-hint-btn {

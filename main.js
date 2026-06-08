@@ -1057,15 +1057,20 @@ window.addEventListener('keydown', e => {
 window.addEventListener('resize', () => UI.resize());
 
 // ── Pantalla: desactivar modo silencio físico del iPhone ──────────────────────
-// Solo se muestra en iOS (touch device). Se llama después de cerrar el safari hint
-// (o en el primer toque del tutorial si no hay safari hint).
+// Se muestra en iOS (cualquier navegador). Guarda con flag para no mostrarse dos veces.
+// En Safari iOS: se llama desde el "Continuar" del safari hint.
+// En otros iOS: se muestra en el primer toque de la página.
+let _silentHintShown = false;
 function _showSilentHint() {
+  if (_silentHintShown) return;
+  _silentHintShown = true;
+
   const el  = document.getElementById('silent-hint');
   const btn = document.getElementById('silent-hint-btn');
   if (!el) return;
 
   el.style.display = 'flex';
-  _safariHintActive = true; // bloquear taps del tutorial mientras esta pantalla está visible
+  _safariHintActive = true;
 
   function closeSilent() {
     _safariHintActive = false;
@@ -1078,6 +1083,22 @@ function _showSilentHint() {
     btn.addEventListener('click', closeSilent);
   }
 }
+
+// Para iOS no-Safari: mostrar el aviso de silencio en el primer toque de pantalla
+(function() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isSafariUA = /safari/i.test(navigator.userAgent)
+    && !/crios|fxios|opios|chrome|android/i.test(navigator.userAgent);
+  if (!isIOS || isSafariUA) return; // Safari tiene su propio flujo via safari-hint
+
+  function onFirstTouch() {
+    document.removeEventListener('touchstart', onFirstTouch, true);
+    document.removeEventListener('click',      onFirstTouch, true);
+    _showSilentHint();
+  }
+  document.addEventListener('touchstart', onFirstTouch, { capture: true, once: true });
+  document.addEventListener('click',      onFirstTouch, { capture: true, once: true });
+})();
 
 // ── Safari: instrucciones para ocultar la barra antes del tutorial ───────────
 // Solo Safari iOS (no Chrome/Firefox/otros en iOS que también reportan "safari").
