@@ -979,20 +979,28 @@ function _tutAdvance() {
   if (_tutScene < LAST_SCENE) {
     _tutGoTo(_tutScene + 1);
   } else {
-    // Última escena: inicializar MediaPipe y arrancar
-    if (!handsModel) {
-      initHands();
-      UI.init(videoEl, mainCanvas);
-      UI.resize();
-      startCamera();
+    console.log('[tut] última escena — arrancando juego...');
+    try {
+      if (!handsModel) {
+        initHands();
+        UI.init(videoEl, mainCanvas);
+        UI.resize();
+        startCamera();
+      }
+      start();
+      console.log('[tut] juego iniciado');
+    } catch (err) {
+      console.error('[tut] ERROR al arrancar:', err);
     }
-    start();
   }
 }
 
 // Toque en el tutorial (móvil).
-// Usamos touchstart Y click para máxima compatibilidad con Safari iOS.
-// El debounce de 400ms evita que ambos eventos disparen _tutAdvance dos veces en el mismo toque.
+// Los listeners van en DOCUMENT (capture), no en tutorialEl.
+// Motivo: cuando initSafariHint pone pointer-events:none en tutorialEl,
+// los toques apuntan a elementos hermanos (canvas, video) y el evento
+// no pasa por tutorialEl, por lo que un listener en ese elemento no dispara.
+// A nivel document, el capture siempre recibe todos los toques.
 let _lastTutTouch = 0;
 function _tutTap() {
   const now = Date.now();
@@ -1001,14 +1009,24 @@ function _tutTap() {
   _tutAdvance();
 }
 
-// touchstart: respuesta inmediata sin delay de 300ms
-tutorialEl.addEventListener('touchstart', e => {
+function _tutShouldHandle() {
+  if (tutorialEl.classList.contains('hidden')) return false; // juego en marcha
+  if (document.getElementById('safari-hint'))  return false; // hint safari visible
+  return true;
+}
+
+// touchstart a nivel document: captura todos los toques, aunque tutorialEl tenga pointer-events:none
+document.addEventListener('touchstart', e => {
+  if (!_tutShouldHandle()) return;
   e.preventDefault();
   _tutTap();
 }, { passive: false, capture: true });
 
-// click: fallback para Safari y otros navegadores donde touchstart puede fallar
-tutorialEl.addEventListener('click', () => _tutTap());
+// click: fallback para teclado/ratón y navegadores sin touchstart fiable
+document.addEventListener('click', e => {
+  if (!_tutShouldHandle()) return;
+  _tutTap();
+});
 
 // Listener global de teclado:
 // - Con el tutorial visible: cualquier tecla imprimible/enter/espacio/flecha avanza escena.
