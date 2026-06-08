@@ -40,8 +40,6 @@ const PRECACHE = [
   '/svg/icons/icon_delay.svg',
   '/svg/icons/icon_synth.svg',
   '/svg/icons/icon_bass.svg',
-  '/svg/icons/icon_effects.svg',
-  '/svg/icons/icon_added_effects.svg',
   '/svg/icons/icon_tempo.svg',
   '/svg/icons/icon_mute.svg',
   '/svg/icons/icon_palette.svg',
