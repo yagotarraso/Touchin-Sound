@@ -163,7 +163,7 @@
         overlay.style.display = portrait ? 'flex' : 'none';
       }
       window.addEventListener('resize', check);
-      window.addEventListener('orientationchange', check);
+      window.addEventListener('orientationchange', () => setTimeout(check, 150));
       check();
     })();
   </script>
