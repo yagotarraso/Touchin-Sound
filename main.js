@@ -926,6 +926,10 @@ const tutHint    = document.getElementById('tutHint');
 const LAST_SCENE = scenes.length - 1;
 let   _tutScene  = 0;
 
+// Inicializar el texto del hint según el dispositivo (el HTML tiene el texto de teclado por defecto)
+const _isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+if (_isTouch && tutHint) tutHint.textContent = '— Tap to continue —';
+
 // Navega a una escena concreta: actualiza clases CSS y el texto del hint.
 function _tutGoTo(idx) {
   scenes[_tutScene].classList.remove('active');
@@ -933,10 +937,9 @@ function _tutGoTo(idx) {
   _tutScene = Math.max(0, Math.min(LAST_SCENE, idx));
   scenes[_tutScene].classList.add('active');
   dots[_tutScene].classList.add('active');
-  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   tutHint.textContent = _tutScene === LAST_SCENE
-    ? (isTouch ? '— Tap to start —'    : '— Press any key to start —')
-    : (isTouch ? '— Tap to continue —' : '— Press any key to continue —');
+    ? (_isTouch ? '— Tap to start —'    : '— Press any key to start —')
+    : (_isTouch ? '— Tap to continue —' : '— Press any key to continue —');
 }
 
 // ── Pantalla completa + orientación landscape ─────────────────────────────────
