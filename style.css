@@ -291,6 +291,55 @@ html, body {
   text-align: center;
 }
 
+/* ── Overlay: silencio físico iPhone ────────────────────────────────────────── */
+#silent-hint {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99998;   /* justo debajo del safari-hint (99999) */
+  background: #000;
+  align-items: center;
+  justify-content: center;
+}
+#silent-hint-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px 36px;
+  max-width: 380px;
+  text-align: center;
+}
+.silent-hint-desc {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+  color: rgba(255,255,255,0.55);
+}
+#silent-hint-btn {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.88rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(255,255,255,0.10);
+  border: 1.5px solid rgba(255,255,255,0.35);
+  border-radius: 8px;
+  padding: 14px 36px;
+  cursor: pointer;
+  margin-top: 4px;
+  -webkit-appearance: none;
+}
+#silent-hint-btn:active {
+  background: rgba(255,255,255,0.22);
+}
+#silent-hint.hiding {
+  transition: opacity 0.4s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ── Overlay Safari: instrucciones para ocultar barra ───────────────────────── */
 #safari-hint {
   display: none;

@@ -268,16 +268,19 @@ function _processRtControl() {
     case 'pad':
       Audio.setPadChord(rY);           // mano derecha arriba = acorde alto (I..VII)
       Audio.setPadTremolo(1 - lY);     // mano izquierda arriba = más tremolo
+      Audio.setPadFilter(lOpen);       // mano izquierda abierta = sonido brillante
       Audio.setLayerVolume('pad',   Math.min(1.2, rOpen * 1.2));
       break;
     case 'bass':
       Audio.setBassGroove(1 - rY);     // mano derecha arriba = groove más complejo
       Audio.setBassGate(1 - lY);       // mano izquierda arriba = más gate/pulso
+      Audio.setBassFilter(lOpen);      // mano izquierda abierta = sonido brillante
       Audio.setLayerVolume('bass',  Math.min(1.2, rOpen * 1.2));
       break;
     case 'synth':
       Audio.setSynthArpLen(rY);        // mano derecha arriba = arpegio más largo
       Audio.setSynthTremolo(1 - lY);   // mano izquierda arriba = más tremolo
+      Audio.setSynthFilter(lOpen);     // mano izquierda abierta = sonido brillante
       Audio.setLayerVolume('synth', Math.min(1.2, rOpen * 1.2));
       break;
     case 'perc':
@@ -287,6 +290,7 @@ function _processRtControl() {
     case 'lead':
       Audio.setLeadNote(rY);           // mano derecha arriba = nota más alta
       Audio.setLeadTremolo(1 - lY);    // mano izquierda arriba = más tremolo
+      Audio.setLeadFilter(lOpen);      // mano izquierda abierta = sonido brillante
       Audio.setLayerVolume('lead',  Math.min(1.2, rOpen * 1.2));
       break;
   }
@@ -1052,6 +1056,29 @@ window.addEventListener('keydown', e => {
 
 window.addEventListener('resize', () => UI.resize());
 
+// ── Pantalla: desactivar modo silencio físico del iPhone ──────────────────────
+// Solo se muestra en iOS (touch device). Se llama después de cerrar el safari hint
+// (o en el primer toque del tutorial si no hay safari hint).
+function _showSilentHint() {
+  const el  = document.getElementById('silent-hint');
+  const btn = document.getElementById('silent-hint-btn');
+  if (!el) return;
+
+  el.style.display = 'flex';
+  _safariHintActive = true; // bloquear taps del tutorial mientras esta pantalla está visible
+
+  function closeSilent() {
+    _safariHintActive = false;
+    el.classList.add('hiding');
+    setTimeout(() => el.remove(), 420);
+  }
+
+  if (btn) {
+    btn.addEventListener('touchstart', e => { e.preventDefault(); closeSilent(); }, { passive: false });
+    btn.addEventListener('click', closeSilent);
+  }
+}
+
 // ── Safari: instrucciones para ocultar la barra antes del tutorial ───────────
 // Solo Safari iOS (no Chrome/Firefox/otros en iOS que también reportan "safari").
 // Muestra un overlay con pasos escritos + botón "Continuar".
@@ -1091,12 +1118,12 @@ window.addEventListener('resize', () => UI.resize());
     setTimeout(() => hint.remove(), 520);
   }
 
-  // Botón "Continuar": pide permiso de cámara y luego descarta el hint.
-  // En Safari iOS el permiso de cámara se pide aquí (antes del tutorial)
-  // para que el usuario vea la solicitud en el orden correcto.
+  // Al continuar: pide permiso de cámara, cierra el safari hint
+  // y muestra la pantalla de "desactiva el modo silencio".
   function onContinue() {
-    _requestCameraPermission(); // muestra el diálogo de permiso de cámara
+    _requestCameraPermission();
     dismiss();
+    _showSilentHint();
   }
   if (btn) {
     btn.addEventListener('touchstart', e => { e.preventDefault(); onContinue(); }, { passive: false });

@@ -156,9 +156,9 @@ const DRUM_CATALOG = {
 // FX_LABELS:  nombre corto para mostrar en la UI.
 // FX_COLORS:  color RGB por efecto — usado en el menú de la mano izquierda y en
 //             los badges de la paleta.
-const FX_OPTIONS = ['reverb', 'filter', 'drive', 'delay', 'flutter'];
-const FX_LABELS  = { reverb:'Verb', filter:'Filtro', drive:'Drive', delay:'Delay', flutter:'Flutter' };
-const FX_COLORS  = { reverb:[100,180,255], filter:[255,180,60], drive:[255,80,80], delay:[140,255,180], flutter:[200,100,255] };
+const FX_OPTIONS = ['reverb', 'drive', 'delay', 'flutter'];
+const FX_LABELS  = { reverb:'Verb', drive:'Drive', delay:'Delay', flutter:'Flutter' };
+const FX_COLORS  = { reverb:[100,180,255], drive:[255,80,80], delay:[140,255,180], flutter:[200,100,255] };
 
 // Formas de onda disponibles por capa. El orden importa: es el que se muestra en
 // el menú de la mano izquierda cuando la capa está en modo play/edit.
@@ -292,7 +292,7 @@ const _layerRt = {
 // Cuando el bucle se reproduce ('looping'), se lee la instantánea del paso actual
 // en vez de los valores en tiempo real de las manos.
 // _LOOP_STEPS=8 coincide exactamente con los patrones de batería de 8 pasos.
-const _LOOP_STEPS = 8;    // 8 corcheas = 1 compás de 4/4
+const _LOOP_STEPS = 16;   // 16 corcheas = 2 compases de 4/4
 const _layerLoopBuf = { pad:null, bass:null, synth:null, perc:null, lead:null };
 
 let _recordTarget  = null;   // clave de la capa que se está grabando ahora mismo

@@ -10,6 +10,24 @@
 </head>
 <body>
 
+  <!-- Overlay: modo silencio físico del iPhone -->
+  <div id="silent-hint">
+    <div id="silent-hint-inner">
+      <p class="safari-hint-title">Touching Sound</p>
+      <!-- Icono del interruptor de silencio del iPhone -->
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="18" y="4" width="16" height="44" rx="4" stroke="white" stroke-width="2.5"/>
+        <rect x="21" y="8" width="10" height="10" rx="2" fill="white" opacity="0.3"/>
+        <path d="M8 16 L8 36" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="8" cy="14" r="3" fill="#ff6b35"/>
+        <line x1="4" y1="10" x2="12" y2="38" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+      </svg>
+      <p class="safari-hint-sub">Asegúrate de que el modo<br><strong>silencio está desactivado.</strong></p>
+      <p class="silent-hint-desc">El botón físico lateral del iPhone<br>debe mostrar el lado <strong>sin naranja</strong>.</p>
+      <button id="silent-hint-btn">Entendido →</button>
+    </div>
+  </div>
+
   <!-- Overlay Safari: instrucciones para ocultar la barra del navegador -->
   <div id="safari-hint">
     <div id="safari-hint-inner">
@@ -17,6 +35,18 @@
       <p class="safari-hint-sub">Para una mejor experiencia,<br>oculta la barra del navegador:</p>
 
       <ol class="safari-steps">
+        <li>
+          <span class="safari-step-icon">
+            <!-- Icono: checkmark / list -->
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <rect x="1" y="1" width="20" height="20" rx="4" stroke="white" stroke-width="1.5" />
+              <line x1="5" y1="8" x2="17" y2="8" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+              <line x1="5" y1="11" x2="17" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+              <line x1="5" y1="14" x2="13" y2="14" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+          </span>
+          Ve a <strong>Opciones de lectura</strong>
+        </li>
         <li>
           <span class="safari-step-icon">
             <!-- Icono: barra con "..." -->
@@ -27,19 +57,7 @@
               <circle cx="28" cy="11" r="1.8" fill="white"/>
             </svg>
           </span>
-          Pulsa los <strong>tres puntos</strong> en la barra de búsqueda
-        </li>
-        <li>
-          <span class="safari-step-icon">
-            <!-- Icono: checkmark / list -->
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <rect x="1" y="1" width="20" height="20" rx="4" stroke="white" stroke-width="1.5"/>
-              <line x1="5" y1="8"  x2="17" y2="8"  stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-              <line x1="5" y1="11" x2="17" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-              <line x1="5" y1="14" x2="13" y2="14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </span>
-          Selecciona <strong>Ocultar barra de herramientas</strong>
+          Pulsa los <strong>tres puntos</strong> y selecciona <strong>Ocultar barra de herramientas</strong>
         </li>
       </ol>
 
