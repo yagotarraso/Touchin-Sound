@@ -292,16 +292,17 @@ html, body {
 }
 
 /* ── Overlay: silencio físico iPhone ────────────────────────────────────────── */
-/* Silent-hint usa los mismos estilos internos que safari-hint */
+/* Silent-hint: oculto por defecto, visible en iOS (clase añadida por JS en <head>) */
 #silent-hint {
   display: none;
   position: fixed;
   inset: 0;
-  z-index: 99998;   /* justo debajo del safari-hint (99999) */
+  z-index: 99998;
   background: #000;
   align-items: center;
   justify-content: center;
 }
+html.ios #silent-hint { display: flex; }
 #silent-hint.hiding {
   transition: opacity 0.4s ease;
   opacity: 0;

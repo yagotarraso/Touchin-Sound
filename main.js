@@ -1055,64 +1055,60 @@ window.addEventListener('keydown', e => {
 
 window.addEventListener('resize', () => UI.resize());
 
-// ── Hints pre-tutorial: barra Safari + modo silencio iPhone ──────────────────
-// Flujo: safari-hint (solo Safari iOS) → silent-hint (todo iOS) → tutorial.
-// Sin timeouts, sin auto-detección, sin animaciones: solo display directo.
+// ── Hints pre-tutorial: modo silencio → barra Safari → tutorial ───────────────
+// El silent-hint ya está visible en iOS via CSS (html.ios #silent-hint).
+// JS solo gestiona los botones: ocultar hints y pasar al siguiente paso.
 (function() {
   const ua       = navigator.userAgent;
   const isIOS    = /iphone|ipad|ipod/i.test(ua);
   const isSafari = isIOS
                    && /safari/i.test(ua)
-                   && !/crios|fxios|opios|chrome|android/i.test(ua)
-                   && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+                   && !/crios|fxios|opios|chrome|android/i.test(ua);
 
-  if (!isIOS) return;  // solo actúa en iOS
+  if (!isIOS) return;
 
-  const safariHint = document.getElementById('safari-hint');
-  const safariBtn  = document.getElementById('safari-hint-btn');
+  _safariHintActive = true;  // silent-hint visible, bloquear taps del tutorial
+
   const silentHint = document.getElementById('silent-hint');
   const silentBtn  = document.getElementById('silent-hint-btn');
+  const safariHint = document.getElementById('safari-hint');
+  const safariBtn  = document.getElementById('safari-hint-btn');
 
-  // Paso 2: mostrar mute hint
-  function showSilent() {
-    if (!silentHint) return;
-    silentHint.style.display = 'flex';
+  // Paso 2 (solo Safari): mostrar hint de barra del navegador
+  function showSafariHint() {
+    if (!safariHint) { _safariHintActive = false; return; }
+    safariHint.style.display = 'flex';
     _safariHintActive = true;
+
+    let done = false;
+    function onContinue() {
+      if (done) return;
+      done = true;
+      _requestCameraPermission();
+      safariHint.style.display = 'none';
+      _safariHintActive = false;
+    }
+    if (safariBtn) {
+      safariBtn.addEventListener('touchstart', e => { e.preventDefault(); onContinue(); }, { passive: false });
+      safariBtn.addEventListener('click', onContinue);
+    }
   }
 
-  // Paso 3: cerrar mute hint → tutorial disponible
+  // Paso 1: cerrar mute hint
   let silentDone = false;
   function onSilentContinue() {
     if (silentDone) return;
     silentDone = true;
     if (silentHint) silentHint.style.display = 'none';
-    _safariHintActive = false;
+    if (isSafari) {
+      showSafariHint();  // Safari: siguiente hint
+    } else {
+      _safariHintActive = false;  // otros iOS: tutorial disponible
+    }
   }
   if (silentBtn) {
     silentBtn.addEventListener('touchstart', e => { e.preventDefault(); onSilentContinue(); }, { passive: false });
     silentBtn.addEventListener('click', onSilentContinue);
-  }
-
-  if (isSafari && safariHint) {
-    // Paso 1: mostrar safari-hint primero
-    safariHint.style.display = 'flex';
-    _safariHintActive = true;
-
-    let safariDone = false;
-    function onSafariContinue() {
-      if (safariDone) return;
-      safariDone = true;
-      _requestCameraPermission();
-      safariHint.style.display = 'none';
-      showSilent();
-    }
-    if (safariBtn) {
-      safariBtn.addEventListener('touchstart', e => { e.preventDefault(); onSafariContinue(); }, { passive: false });
-      safariBtn.addEventListener('click', onSafariContinue);
-    }
-  } else {
-    // Chrome iOS u otros: solo mute hint directamente
-    showSilent();
   }
 })();
 
