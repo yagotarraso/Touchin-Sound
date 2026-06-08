@@ -1045,11 +1045,16 @@ window.addEventListener('resize', () => UI.resize());
 // Bonus: si se detecta que la barra ya se ocultó (height increase), se descarta solo.
 (function initSafariHint() {
   const ua = navigator.userAgent;
-  // Safari iOS: contiene "Safari" pero NO contiene Chrome, CriOS (Chrome iOS),
-  // FxiOS (Firefox iOS), OPiOS (Opera iOS), ni "Android"
+  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  // Safari iOS: contiene "Safari" y "Mobile" pero NO Chrome/CriOS/FxiOS/Android
   const isSafariMobile = /safari/i.test(ua)
+    && /mobile/i.test(ua)
     && !/crios|fxios|opios|chrome|android/i.test(ua)
-    && _isTouch;
+    && hasTouch;
+
+  // Log siempre para poder depurar desde DevTools remote
+  console.log('[safari-hint] UA:', ua);
+  console.log('[safari-hint] isSafariMobile:', isSafariMobile, '| hasTouch:', hasTouch);
 
   if (!isSafariMobile) return;
 

@@ -381,6 +381,16 @@ function _makeDriveCurve(amount) {
 function init() {
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // iOS requiere reproducir un buffer silencioso en el mismo gesto del usuario
+  // para desbloquear la sesión de audio. Sin esto, el AudioContext queda suspendido
+  // y no produce ningún sonido aunque esté en estado 'running'.
+  const _unlockBuf = audioCtx.createBuffer(1, 1, 22050);
+  const _unlockSrc = audioCtx.createBufferSource();
+  _unlockSrc.buffer = _unlockBuf;
+  _unlockSrc.connect(audioCtx.destination);
+  _unlockSrc.start(0);
+
   if (audioCtx.state === 'suspended') audioCtx.resume();
 
   masterOut  = audioCtx.createGain(); masterOut.gain.value  = 0.80;
