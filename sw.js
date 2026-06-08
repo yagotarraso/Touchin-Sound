@@ -2,7 +2,7 @@
 // Estrategia: cache-first para todos los assets locales.
 // En el primer visit se descargan y cachean; los siguientes son instantáneos.
 
-const CACHE = 'touching-sound-v13';
+const CACHE = 'touching-sound-v14';
 
 // Assets locales a precachear en el install
 const PRECACHE = [

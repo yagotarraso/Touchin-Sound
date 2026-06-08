@@ -1070,11 +1070,10 @@ function _showSilentHint() {
   if (!el) return;
 
   el.style.display = 'flex';
-  // Nota: _safariHintActive ya está true (puesto por initSafariHint o aquí directamente)
-  if (!_safariHintActive) _safariHintActive = true;
+  _safariHintActive = true;  // bloquear taps del tutorial
 
   function closeSilent() {
-    _safariHintActive = false; // ahora sí liberamos el tutorial
+    _safariHintActive = false;  // liberar el tutorial
     el.classList.add('hiding');
     setTimeout(() => el.remove(), 420);
   }
@@ -1117,26 +1116,24 @@ function _showSilentHint() {
   const btn  = document.getElementById('safari-hint-btn');
   if (!hint) return;
 
-  // Mostrar safari-hint Y silent-hint simultáneamente.
-  // Safari-hint tiene z-index 99999, silent-hint z-index 99998.
-  // El usuario ve safari-hint primero; cuando lo descarta, silent-hint ya está visible detrás.
+  // Mostrar safari-hint. El silent-hint se muestra DESPUÉS, en el callback del dismiss.
   hint.style.display = 'flex';
-  _showSilentHint();          // silent-hint aparece detrás ya desde el principio
-  _safariHintActive  = true;  // se mantiene activo hasta que se cierre el SILENT hint
+  _safariHintActive  = true;
 
   let dismissed = false;
 
   function dismiss() {
     if (dismissed) return;
     dismissed = true;
-    // NO cambiamos _safariHintActive aquí — el silent-hint sigue bloqueando el tutorial
     hint.classList.add('hiding');
     window.removeEventListener('resize', onResize);
-    setTimeout(() => hint.remove(), 520);
+    // Cuando el safari-hint termina de desaparecer → mostrar silent-hint
+    setTimeout(() => {
+      hint.remove();
+      _showSilentHint();   // ← aquí, de forma secuencial y garantizada
+    }, 520);
   }
 
-  // Al continuar: pide permiso de cámara y cierra el safari hint.
-  // El silent-hint ya visible debajo toma el protagonismo automáticamente.
   function onContinue() {
     _requestCameraPermission();
     dismiss();
