@@ -897,5 +897,36 @@
       navigator.serviceWorker.register('/sw.js');
     }
   </script>
+
+  <script>
+  /* ── Botón Play: pedir permiso de cámara antes de navegar ───────────────────
+     Al hacer clic en las manos:
+     1. Se solicita el permiso de cámara (el navegador lo recuerda para toda la sesión).
+     2. Se navega a la app. El permiso ya está concedido → sin interrupciones posteriores.
+     Si el usuario deniega o hay error, navegamos igualmente (MediaPipe lo gestionará).
+     El botón queda visualmente desactivado mientras espera la respuesta del diálogo. */
+  (function () {
+    const link = document.querySelector('.manos-link');
+    if (!link) return;
+
+    link.addEventListener('click', async function (e) {
+      e.preventDefault();
+      const dest = this.href;
+
+      // Feedback visual: cursor de espera mientras aparece el diálogo
+      link.style.opacity = '0.55';
+      link.style.pointerEvents = 'none';
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        stream.getTracks().forEach(t => t.stop()); // solo necesitamos el permiso
+      } catch (_) {
+        // Permiso denegado o sin cámara — navegar igualmente
+      }
+
+      window.location.href = dest;
+    });
+  })();
+  </script>
 </body>
 </html>

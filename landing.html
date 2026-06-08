@@ -841,5 +841,22 @@
       navigator.serviceWorker.register('/sw.js');
     }
   </script>
+  <script>
+  (function () {
+    const link = document.querySelector('.manos-link');
+    if (!link) return;
+    link.addEventListener('click', async function (e) {
+      e.preventDefault();
+      const dest = this.href;
+      link.style.opacity = '0.55';
+      link.style.pointerEvents = 'none';
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        stream.getTracks().forEach(t => t.stop());
+      } catch (_) {}
+      window.location.href = dest;
+    });
+  })();
+  </script>
 </body>
 </html>

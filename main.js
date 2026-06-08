@@ -942,31 +942,32 @@ function _tutGoTo(idx) {
     : (_isTouch ? '— Tap to continue —' : '— Press any key to continue —');
 }
 
+// ── Permiso de cámara ─────────────────────────────────────────────────────────
+// Se pide UNA SOLA VEZ, antes de que MediaPipe la necesite.
+// En Safari: se llama desde el botón "Continuar" del hint.
+// En otros navegadores: se llama en el primer toque del tutorial.
+// Se separa completamente del fullscreen para evitar condiciones de carrera en iOS.
+let _cameraPermDone = false;
+async function _requestCameraPermission() {
+  if (_cameraPermDone) return;
+  _cameraPermDone = true;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    stream.getTracks().forEach(t => t.stop());
+  } catch (_) { /* denegado o sin cámara — MediaPipe lo gestionará después */ }
+}
+
 // ── Pantalla completa + orientación landscape ─────────────────────────────────
-// Se solicita en la primera interacción del tutorial (toque o tecla).
-// Requiere un "user gesture" — por eso no se llama en el load.
-// screen.orientation.lock('landscape') anula el bloqueo de rotación del SO.
+// Solo fullscreen y lock de orientación — SIN pedir cámara aquí.
 let _fullscreenDone = false;
 async function _requestFullscreenLandscape() {
   if (_fullscreenDone) return;
   _fullscreenDone = true;
-
-  // 1. Pedir permiso de cámara ANTES del fullscreen.
-  //    Si lo pedimos después, el navegador sale del fullscreen para mostrar el diálogo
-  //    y ya no vuelve. Al pedirlo aquí, el diálogo aparece antes de entrar en fullscreen.
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    stream.getTracks().forEach(t => t.stop()); // solo queremos el permiso, no el stream
-  } catch (_) { /* permiso denegado o desktop sin cámara — continuar */ }
-
-  // 2. Fullscreen (ya sin interrupción de permisos)
   try {
     const el = document.documentElement;
     if      (el.requestFullscreen)       await el.requestFullscreen();
     else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
   } catch (_) { /* desktop o iOS — ignorar */ }
-
-  // 3. Bloquear orientación landscape (anula el bloqueo de rotación del SO)
   try {
     if (screen.orientation?.lock) await screen.orientation.lock('landscape');
   } catch (_) { /* ignorar si el navegador no lo permite */ }
@@ -1082,10 +1083,16 @@ window.addEventListener('resize', () => UI.resize());
     }, 520);
   }
 
-  // Botón "Continuar" → descarta manualmente
+  // Botón "Continuar": pide permiso de cámara y luego descarta el hint.
+  // En Safari iOS el permiso de cámara se pide aquí (antes del tutorial)
+  // para que el usuario vea la solicitud en el orden correcto.
+  function onContinue() {
+    _requestCameraPermission(); // muestra el diálogo de permiso de cámara
+    dismiss();
+  }
   if (btn) {
-    btn.addEventListener('touchstart', e => { e.preventDefault(); dismiss(); }, { passive: false });
-    btn.addEventListener('click', dismiss);
+    btn.addEventListener('touchstart', e => { e.preventDefault(); onContinue(); }, { passive: false });
+    btn.addEventListener('click', onContinue);
   }
 
   // Auto-detección bonus: si la barra se oculta sola (landscape + height increase)
