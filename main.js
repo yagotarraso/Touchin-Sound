@@ -1000,41 +1000,27 @@ function _tutAdvance() {
   }
 }
 
-// Toque en el tutorial (móvil).
-// Los listeners van en DOCUMENT (capture), no en tutorialEl.
-// Motivo: cuando initSafariHint pone pointer-events:none en tutorialEl,
-// los toques apuntan a elementos hermanos (canvas, video) y el evento
-// no pasa por tutorialEl, por lo que un listener en ese elemento no dispara.
-// A nivel document, el capture siempre recibe todos los toques.
+// ── Navegación del tutorial por toque ────────────────────────────────────────
+// Flag controlado por initSafariHint: true mientras el hint está visible.
+// Mucho más simple y fiable que buscar el elemento en el DOM.
+let _safariHintActive = false;
+
 let _lastTutTouch = 0;
 function _tutTap() {
+  if (_safariHintActive) return;              // hint de safari visible
+  if (running) return;                        // juego ya arrancado
+  if (tutorialEl.classList.contains('hidden')) return;
   const now = Date.now();
-  if (now - _lastTutTouch < 400) return;
+  if (now - _lastTutTouch < 500) return;      // debounce
   _lastTutTouch = now;
   _tutAdvance();
 }
 
-function _tutShouldHandle() {
-  if (tutorialEl.classList.contains('hidden')) return false; // juego en marcha
-  // El elemento safari-hint SIEMPRE está en el DOM (display:none por CSS).
-  // Solo bloqueamos si JS lo ha puesto display:flex (hint activamente visible).
-  const hint = document.getElementById('safari-hint');
-  if (hint && hint.style.display === 'flex') return false;
-  return true;
-}
+// touchend en tutorialEl: fiable en iOS Safari, no necesita preventDefault
+tutorialEl.addEventListener('touchend', () => _tutTap(), { passive: true });
 
-// touchstart a nivel document: captura todos los toques, aunque tutorialEl tenga pointer-events:none
-document.addEventListener('touchstart', e => {
-  if (!_tutShouldHandle()) return;
-  e.preventDefault();
-  _tutTap();
-}, { passive: false, capture: true });
-
-// click: fallback para teclado/ratón y navegadores sin touchstart fiable
-document.addEventListener('click', e => {
-  if (!_tutShouldHandle()) return;
-  _tutTap();
-});
+// click: fallback desktop / teclado
+tutorialEl.addEventListener('click', () => _tutTap());
 
 // Listener global de teclado:
 // - Con el tutorial visible: cualquier tecla imprimible/enter/espacio/flecha avanza escena.
@@ -1089,28 +1075,20 @@ window.addEventListener('resize', () => UI.resize());
   const btn  = document.getElementById('safari-hint-btn');
   if (!hint) return;
 
-  // Mostrar el overlay; mantener tutorial oculto (pointer-events off) hasta que se descarte
-  hint.style.display              = 'flex';
-  tutorialEl.style.opacity        = '0';
-  tutorialEl.style.pointerEvents  = 'none';
-  tutorialEl.style.transition     = 'opacity 0.5s ease';
+  // Mostrar el hint. El tutorial sigue detrás (z-index del hint lo tapa).
+  // NO tocamos los estilos del tutorial — demasiada fuente de bugs.
+  hint.style.display = 'flex';
+  _safariHintActive  = true;   // bloquear taps del tutorial mientras el hint está visible
 
   let dismissed = false;
 
   function dismiss() {
     if (dismissed) return;
     dismissed = true;
+    _safariHintActive = false; // permitir taps del tutorial
     hint.classList.add('hiding');
     window.removeEventListener('resize', onResize);
-    setTimeout(() => {
-      hint.remove();
-      // IMPORTANTE: limpiar el inline style (no poner '1') para que el CSS tenga control.
-      // Si pusieramos style.opacity='1', ese inline sobreescribiría el opacity:0 de .hidden
-      // cuando start() añade esa clase — el tutorial quedaría visible bloqueando el juego.
-      tutorialEl.style.opacity      = '';   // ← quitar inline, dejar que CSS mande
-      tutorialEl.style.transition   = '';   // ← limpiar también la transición
-      tutorialEl.style.pointerEvents = '';
-    }, 520);
+    setTimeout(() => hint.remove(), 520);
   }
 
   // Botón "Continuar": pide permiso de cámara y luego descarta el hint.
