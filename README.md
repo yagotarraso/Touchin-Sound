@@ -31,7 +31,7 @@ samples/        Drum WAV samples
 
 ## Usage
 
-https://touchin-sound.pages.dev/
+https://touchin-sound.pages.dev/  
 Open the deployed URL, allow camera access, and follow the on-screen tutorial.  
 No installation required.
 
